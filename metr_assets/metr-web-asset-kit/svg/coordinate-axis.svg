@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" fill="none">
+<path d="M70 330H550M70 330V40" stroke="#F5F5F2" stroke-width="2"/><path d="M190 325V335M310 325V335M430 325V335M65 250H75M65 170H75M65 90H75" stroke="#7C7C78" stroke-width="2"/><circle cx="430" cy="120" r="7" fill="#D7FF3F"/><path d="M430 120V330M70 120H430" stroke="#7C7C78" stroke-dasharray="5 5"/><text x="445" y="112" fill="#F5F5F2" font-family="monospace" font-size="14">X:75 / Y:72</text>
+</svg>

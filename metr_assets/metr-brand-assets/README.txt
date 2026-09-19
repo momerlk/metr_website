@@ -1,0 +1,1 @@
+Metr brand assets. Symbol geometry is vector. Wordmark uses a bold sans-serif fallback; convert the final approved typeface to outlines for production.

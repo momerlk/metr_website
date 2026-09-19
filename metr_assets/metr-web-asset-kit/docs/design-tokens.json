@@ -1,0 +1,20 @@
+{
+  "colors": {
+    "background": "#111110",
+    "foreground": "#F5F5F2",
+    "muted": "#7C7C78",
+    "line": "#343432",
+    "signal": "#D7FF3F"
+  },
+  "principles": [
+    "measurement",
+    "precision",
+    "instrumentation",
+    "fashion intelligence",
+    "negative space"
+  ],
+  "usage": {
+    "signal_color": "Use sparingly for live measurements, active AI states and key data points.",
+    "graphics": "Prefer oversized crops, thin rules and technical annotations over decorative illustrations."
+  }
+}

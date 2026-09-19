@@ -1,0 +1,22 @@
+:root {
+  --metr-bg: #111110;
+  --metr-fg: #F5F5F2;
+  --metr-muted: #7C7C78;
+  --metr-line: #343432;
+  --metr-signal: #D7FF3F;
+  --metr-grid: 40px;
+}
+.metr-grid {
+  background-image:
+    linear-gradient(var(--metr-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--metr-line) 1px, transparent 1px);
+  background-size: var(--metr-grid) var(--metr-grid);
+}
+.metr-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 12px;
+}
+.metr-rule { border-top: 1px solid var(--metr-line); }
+.metr-signal { color: var(--metr-signal); }
