@@ -21,6 +21,7 @@ FORM: tech-pack / tailor's rule, brief-pinned; no seed rolled.
   --bg: #151514;
   --panel: #1b1b19;
   --panel-2: #222220;
+  --product-ground: #393932;
   --line: #2f2f2c;
   --line-strong: #4a4a43;
   --text: #f2f1ec;
@@ -85,7 +86,7 @@ h3 {
   text-wrap: balance;
 }
 h1 {
-  font-size: clamp(56px, 7.4vw, 96px);
+  font-size: clamp(56px, 7.4vw, 104px);
   line-height: 0.98;
   letter-spacing: -0.04em;
 }
@@ -122,6 +123,7 @@ h3 {
 .kicker:before {
   content: "";
   width: 22px;
+  flex-shrink: 0;
   height: 10px;
   background:
     linear-gradient(var(--brass), var(--brass)) 0 100% / 100% 1px no-repeat,
@@ -173,6 +175,18 @@ h3 {
   color: var(--brass);
   border-color: var(--brass);
 }
+.button > span,
+.text-link > span,
+.nav-cta > span {
+  transition: transform 0.25s var(--ease);
+}
+@media (hover: hover) {
+  .button:hover > span,
+  .text-link:hover > span,
+  .nav-cta:hover > span {
+    transform: translateX(4px);
+  }
+}
 /* Header */
 .site-header {
   position: sticky;
@@ -213,8 +227,8 @@ h3 {
 }
 .brand {
   display: flex;
-  width: 116px;
-  overflow: hidden;
+  width: 144px;
+  flex-shrink: 0;
 }
 .brand img {
   max-width: none;
@@ -349,15 +363,16 @@ h3 {
 /* Hero */
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  gap: 64px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(40px, 5vw, 72px);
   align-items: center;
-  padding-block: 72px 80px;
+  padding-block: clamp(64px, 7vw, 104px) 88px;
 }
 .hero-copy > p {
   font-size: 19px;
-  max-width: 34em;
-  margin: 36px 0 36px;
+  max-width: 29em;
+  line-height: 1.65;
+  margin: 32px 0 36px;
 }
 .hero-actions {
   display: flex;
@@ -376,7 +391,7 @@ h3 {
 }
 .scale-strip ol {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
   padding: 28px 0 34px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -398,7 +413,7 @@ h3 {
 }
 /* Sections */
 .section {
-  padding-block: 120px;
+  padding-block: clamp(88px, 9vw, 128px);
   border-bottom: 1px solid var(--line);
 }
 .section-heading {
@@ -484,12 +499,12 @@ h3 {
 /* Features */
 .feature {
   display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  gap: 88px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(40px, 6vw, 88px);
   align-items: center;
 }
 .fit-section {
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
 }
 .feature-copy p {
   font-size: 17px;
@@ -551,7 +566,8 @@ h3 {
   align-items: center;
   gap: 16px;
   padding: 0 22px;
-  height: 48px;
+  min-height: 48px;
+  padding-block: 12px;
   border-bottom: 1px solid var(--line);
   font: 500 12px var(--mono);
   letter-spacing: 0.08em;
@@ -580,7 +596,7 @@ h3 {
   line-height: 1.35;
   letter-spacing: -0.02em;
   margin: 10px 0 24px;
-  min-height: 2.7em;
+  min-height: 4.05em;
   animation: appear 0.5s var(--ease) both;
 }
 .demo-body .reading {
@@ -610,8 +626,8 @@ h3 {
 }
 .product-image {
   aspect-ratio: 1 / 1.1;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
+  background: var(--product-ground);
+  border: 1px solid var(--line-strong);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -625,9 +641,9 @@ h3 {
   font-size: 15px;
   font-weight: 500;
   margin: 12px 0 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-height: 2.5em;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 .product-meta {
   display: flex;
@@ -665,7 +681,7 @@ h3 {
   min-height: 52px;
   padding: 0 12px;
   position: relative;
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
 }
 .prompt-switch button:last-child {
   border-right: 0;
@@ -675,21 +691,22 @@ h3 {
 }
 .prompt-switch button[aria-selected="true"] {
   color: var(--text);
+  background: var(--brass-tint);
   box-shadow: inset 0 2px 0 var(--brass);
 }
 /* Fit demo */
 .fit-body {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
   padding: 24px 22px;
 }
 .fit-garment {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
+  background: var(--product-ground);
+  border: 1px solid var(--line-strong);
   display: grid;
   place-items: center;
-  min-height: 260px;
+  min-height: 220px;
 }
 .fit-garment .garment {
   width: 94%;
@@ -733,8 +750,9 @@ h3 {
   color: var(--text);
   border: 1px solid var(--line-strong);
   border-radius: 2px;
-  font-size: 15px;
+  font-size: 16px;
   color-scheme: dark;
+  transition: border-color 0.2s, background 0.2s;
 }
 .fit-controls select:hover,
 .access-form input:hover,
@@ -779,7 +797,7 @@ h3 {
 }
 .fit-result {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
   gap: 24px;
   align-items: center;
   padding: 22px;
@@ -1138,6 +1156,12 @@ footer {
   .hero {
     gap: 40px;
   }
+  .fit-body {
+    gap: 16px;
+  }
+  .fit-result {
+    grid-template-columns: 1fr;
+  }
   .feature,
   .fit-section {
     gap: 48px;
@@ -1183,7 +1207,9 @@ footer {
     padding-block: 56px 64px;
   }
   .hero-demo {
+    width: 100%;
     max-width: 620px;
+    justify-self: center;
   }
   .scale-strip ol {
     grid-template-columns: 1fr;
@@ -1223,6 +1249,7 @@ footer {
   .discovery-demo {
     max-width: 620px;
     width: 100%;
+    justify-self: center;
   }
   .integration {
     grid-template-columns: 1fr;
@@ -1252,7 +1279,7 @@ footer {
     padding-block: 56px;
   }
 }
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .menu-toggle {
     display: block;
     background: none;
@@ -1316,7 +1343,12 @@ footer {
   }
   .demo-top {
     padding-inline: 14px;
-    font-size: 11px;
+    font-size: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .demo-top > span:first-child {
+    flex-shrink: 0;
   }
   .demo-body {
     padding: 18px 14px 0;
@@ -1325,6 +1357,15 @@ footer {
     font-size: 19px;
   }
   .product-grid {
+    gap: 8px;
+  }
+  .hero-actions {
+    gap: 10px;
+  }
+  .hero-actions .button {
+    flex: 1 1 150px;
+    justify-content: space-between;
+    padding-inline: 16px;
     gap: 8px;
   }
   .product-card h3 {
@@ -1380,9 +1421,20 @@ footer {
   }
   .integration-list > div {
     font-size: 17px;
+    gap: 16px;
+  }
+  .integration-list dd {
+    text-align: right;
+    font-size: 11px;
+  }
+  .closing .wrap {
+    padding-right: 16px;
+  }
+  .closing-rule {
+    width: 20px;
   }
   .closing h2 {
-    font-size: clamp(44px, 13vw, 60px);
+    font-size: clamp(32px, 10vw, 60px);
   }
   .steps {
     grid-template-columns: 1fr;
