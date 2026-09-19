@@ -26,10 +26,10 @@ export function Navigation() {
           </button>
           <div className="product-dropdown">
             <Link href="/discover" onClick={() => setOpen(false)}>
-              Discover <span>Search that reads intent</span>
+              Discover <span>AI product search</span>
             </Link>
             <Link href="/fit" onClick={() => setOpen(false)}>
-              Fit <span>Size charts into decisions</span>
+              Fit <span>Size recommendations</span>
             </Link>
           </div>
         </div>

@@ -105,8 +105,8 @@ export function DiscoverDemo({ large = false }: { large?: boolean }) {
   return (
     <div className={`demo discovery-demo ${large ? "large-demo" : ""}`}>
       <div className="demo-top">
-        <span>Metr / Discover</span>
-        <span>Sample catalog · interactive</span>
+        <span>Discover / Search</span>
+        <span>Interactive example</span>
       </div>
       <div className="demo-body" key={selected}>
         <div className="demo-query">
@@ -115,8 +115,8 @@ export function DiscoverDemo({ large = false }: { large?: boolean }) {
         </div>
         <dl className="reading">
           <div className="reading-head">
-            <span className="reading-label">Reading</span>
-            <span className="reading-label">Metr understood</span>
+            <span className="reading-label">Request details</span>
+            <span className="reading-label">Identified</span>
           </div>
           {item.intent.map(([k, v], i) => (
             <div key={k} style={{ animationDelay: `${120 + i * 90}ms` }}>
@@ -127,7 +127,7 @@ export function DiscoverDemo({ large = false }: { large?: boolean }) {
         </dl>
         <div className="matches-head">
           <span className="reading-label">Matches</span>
-          <span>3 of 412 in stock</span>
+          <span>3 sample products</span>
         </div>
         <div className="product-grid">
           {item.products.map((p, i) => (
@@ -149,6 +149,10 @@ export function DiscoverDemo({ large = false }: { large?: boolean }) {
         </div>
         {large && <p className="demo-explanation">{item.explanation}</p>}
       </div>
+      <p className="demo-note demo-instruction">
+        Choose an example below. Results are prewritten and use fictional
+        products; this preview does not search a live catalog.
+      </p>
       <div className="prompt-switch" role="tablist" aria-label="Example requests">
         {examples.map((example, i) => (
           <button
@@ -173,8 +177,8 @@ export function FitDemo() {
   return (
     <div className="demo fit-demo">
       <div className="demo-top">
-        <span>Metr / Fit</span>
-        <span>Sample garment · interactive</span>
+        <span>Fit / Sizing</span>
+        <span>Sample garment</span>
       </div>
       <div className="fit-body">
         <div className="fit-garment">
@@ -186,7 +190,7 @@ export function FitDemo() {
         <div className="fit-side">
           <span className="reading-label">Spec 0412</span>
           <h3>Essential oversized tee</h3>
-          <p>Heavyweight cotton, dropped shoulder. Merchant size chart.</p>
+          <p>Heavyweight cotton, dropped shoulder. Sample size chart.</p>
           <div className="fit-controls">
             <label>
               Your usual size
@@ -211,7 +215,7 @@ export function FitDemo() {
         </div>
       </div>
       <table className="pom">
-        <caption className="reading-label">Points of measure, cm</caption>
+        <caption className="reading-label">Garment measurements, cm</caption>
         <thead>
           <tr>
             <th scope="col">Size</th>
@@ -256,8 +260,8 @@ export function FitDemo() {
         </dl>
       </div>
       <p className="demo-note">
-        Illustrative. Real recommendations use the merchant’s approved chart
-        and the customer’s own inputs.
+        Example only: change the size and fit preference to see the guidance
+        update. This demo uses a simplified rule, not a live AI recommendation.
       </p>
     </div>
   );

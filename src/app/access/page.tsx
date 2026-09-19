@@ -3,23 +3,25 @@ import { AccessForm } from "@/components/access-form";
 export const metadata = {
   title: "Request access",
   description:
-    "Bring Metr discovery and fit intelligence to your fashion storefront.",
+    "Request early access to AI product search and size recommendations for your fashion store.",
   alternates: { canonical: "/access" },
 };
 export default function AccessPage() {
   return (
     <section className="access-layout wrap">
       <div className="inner-hero">
-        <Label>Early access, V1</Label>
-        <h1>Put a rule to your storefront.</h1>
+        <Label>Early access for fashion brands</Label>
+        <h1>Let’s explore Metr for your store.</h1>
         <p>
-          Tell us about your brand. We are onboarding a small number of fashion
-          merchants for V1 and scoping each integration by hand.
+          Tell us about your online store and whether you need product search,
+          size recommendations, or both. We’ll review your details and get in
+          touch if your store is a fit for early access.
         </p>
         <div className="access-note">
           <p>
-            Start with Discover, Fit, or both. We review your storefront and
-            catalog, then come back with what makes sense for your range.
+            The next step is a discussion about your catalog, size charts and
+            website setup. Submitting this form does not install Metr or
+            commit you to a purchase.
           </p>
         </div>
       </div>

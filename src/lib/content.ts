@@ -1,49 +1,49 @@
 export const productPages = {
   discover: {
-    label: "Metr Discover",
-    title: "Your catalog, read through intent.",
+    label: "Product search · Metr Discover",
+    title: "AI product search for your fashion store.",
     description:
-      "Customers describe what they want in their own words. Metr works out what they mean, retrieves from your live catalog, and explains each match.",
+      "Customers type requests like ‘a black shirt under Rs 5,000’. Metr searches your product catalog and shows matching clothes, prices and links to buy them on your website.",
     steps: [
       [
-        "Understand",
-        "A natural request becomes structured intent: occasion, budget, colour, fit, register and the things the customer did not say.",
+        "Describe the need",
+        "The customer types what they want: an occasion, colour, style or budget. They do not need to know your product names.",
       ],
       [
-        "Retrieve",
-        "Semantic similarity, structured attributes and stock state, run against the merchant’s real catalog. Nothing is invented.",
+        "Search your catalog",
+        "Metr uses your product descriptions, prices and stock data to find suitable items available in your store.",
       ],
       [
-        "Rank",
-        "Candidates are ordered against the whole request, so a budget or an occasion changes the result, not just the wording.",
+        "Show the matches",
+        "The customer sees products that match their request, along with prices and a short explanation of why each was selected.",
       ],
       [
-        "Explain",
-        "Each result comes with the reason it matched, and room for the customer to refine.",
+        "Continue shopping",
+        "The customer opens a product in your store to choose a size and buy through your existing checkout.",
       ],
     ],
   },
   fit: {
-    label: "Metr Fit",
-    title: "Size charts, turned into a decision.",
+    label: "Size recommendations · Metr Fit",
+    title: "A size recommendation on your product page.",
     description:
-      "Metr Fit reads a garment’s own points of measure against the customer’s usual size and preferred fit, then recommends one size and says how it will sit.",
+      "Customers enter their usual size and how they like clothes to fit. Metr compares their answers with the item’s size chart, recommends a size and explains the expected fit.",
     steps: [
       [
-        "Product-specific",
-        "A medium is not a medium across your range. Fit evaluates sizing in the context of the actual garment’s chart.",
+        "Start with your chart",
+        "Your brand supplies the product’s measurements for each size. Recommendations depend on that product’s approved size chart.",
       ],
       [
-        "Customer-specific",
-        "Usual size, preferred fit and, where a product needs it, a few body-profile inputs. No more than the garment requires.",
+        "Ask about fit",
+        "The customer shares their usual size and preferred fit. Some products may need additional body measurements.",
       ],
       [
-        "Explainable",
-        "More than a letter. Shoulders, chest, length: how the recommended size is expected to sit, area by area.",
+        "Recommend a size",
+        "Metr compares the customer’s inputs with the garment’s measurements to suggest a size for that product.",
       ],
       [
-        "Grounded",
-        "Recommendations start from the merchant’s approved size chart and the variants actually in stock.",
+        "Explain the fit",
+        "The customer sees how the size is expected to fit, such as relaxed at the chest or longer in length, before deciding to buy.",
       ],
     ],
   },

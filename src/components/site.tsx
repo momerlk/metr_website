@@ -43,15 +43,16 @@ export function Closing() {
   return (
     <section className="closing">
       <div className="wrap">
-        <Label>Early access, V1</Label>
+        <Label>Early access for fashion brands</Label>
         <h2>
-          Commerce in
+          Help customers find
           <br />
-          measurement.
+          what to buy and in which size.
         </h2>
         <p>
-          Put a rule to your storefront. We are onboarding a small number of
-          fashion brands for Discover and Fit.
+          Request early access to Metr. We’ll review your product catalog,
+          size charts and website to plan how search and size recommendations
+          would work in your store.
         </p>
         <CTA />
       </div>
@@ -84,8 +85,8 @@ export function Footer() {
           <Link href="/terms">Terms</Link>
         </nav>
         <span>
-          © {new Date().getFullYear()} Juno Technologies. AI commerce
-          infrastructure for fashion brands.
+          © {new Date().getFullYear()} Juno Technologies. AI product search
+          and size recommendations for fashion stores.
         </span>
       </div>
     </footer>

@@ -15,20 +15,20 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = productPages[slug as keyof typeof productPages];
   const title = product
-    ? `Metr ${slug === "fit" ? "Fit — AI Sizing Intelligence" : "Discover — AI Product Discovery"}`
+    ? `Metr ${slug === "fit" ? "Fit — Size Recommendations" : "Discover — AI Product Search"}`
     : `${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
   const description =
     product?.description ||
     {
       about:
-        "Metr is building commerce infrastructure that understands products and people.",
+        "Metr helps fashion stores offer AI product search and size recommendations using their own catalog and size charts.",
       developers:
-        "Explore the Metr integration direction for storefront APIs, SDKs, and components.",
+        "Explore planned APIs and components for adding Metr product search and size recommendations to your online store.",
       privacy:
         "Information about access requests and data handling on the Metr preview website.",
       terms: "Preview website terms and demonstration limitations.",
     }[slug] ||
-    "Metr commerce intelligence.";
+    "Metr product search and size recommendations.";
   return {
     title,
     description,
@@ -77,30 +77,32 @@ export default async function Page({
       <>
         <section className="inner-hero wrap">
           <Label>About Metr</Label>
-          <h1>Commerce should be measured, not guessed.</h1>
-          <p>Metr is AI commerce infrastructure for fashion brands.</p>
+          <h1>Help customers find a product and choose a size.</h1>
+          <p>We’re building AI product search and size recommendations for online fashion stores.</p>
         </section>
         <article className="article wrap">
           <p>
-            We started by fixing product discovery and sizing inside Juno, our
-            own storefront. The fixes turned out to be infrastructure, so we are
-            opening them to other fashion brands as Metr.
+            Metr is a product of Juno Technologies. It brings two tools to a
+            brand’s own website: Discover, for finding products, and Fit,
+            for choosing a size.
           </p>
           <p>
-            A fashion catalog holds a lot of measurement already: sizes, points
-            of measure, materials, stock, the words a brand uses for its own
-            cuts. Most of it never reaches the customer in a form they can use.
+            Customers often know the occasion or style they want before they
+            know which product to buy. They may also be unsure which size to
+            choose. Metr uses the brand’s product details and size charts to
+            help answer both questions.
           </p>
-          <h2>Measurement at the point of decision.</h2>
+          <h2>Your products. Your website. Your checkout.</h2>
           <p>
-            Metr takes one structured reading of that data and applies it where
-            a customer decides. What do they mean? Which products match? Which
-            size will sit the way they like?
+            Discover matches requests in everyday language to products in your
+            catalog. Fit uses the selected garment’s measurements and the
+            customer’s preferences to suggest a size. Customers stay in your
+            store to complete their purchase.
           </p>
           <p>
-            V1 is Discover and Fit, built on the same reading of your catalog.
-            One layer, designed around your brand, with room to grow into
-            returns and operations later.
+            Metr is in early access. We review integration requirements with
+            each brand. The interactive examples on this website use fictional
+            products to demonstrate the planned customer experience.
           </p>
           <p className="notice">Metr is a product of Juno Technologies.</p>
         </article>
@@ -112,24 +114,23 @@ export default async function Page({
       <>
         <section className="inner-hero wrap">
           <Label>Developers</Label>
-          <h1>Commerce intelligence, exposed as infrastructure.</h1>
+          <h1>Add Metr search and sizing to your website.</h1>
           <p>
-            One reading of the catalog, reachable from your storefront, your
-            backend and the commerce stack you already run.
+            Connect your catalog, prices, stock and size charts. Use Metr to
+            show matching products and size recommendations within your
+            existing online store.
           </p>
           <CTA />
         </section>
         <section className="developer-grid wrap">
           <div>
             <h2>
-              One commerce model.
-              <br />
-              Multiple surfaces.
+              Plan your integration.
             </h2>
             <p>
-              APIs and storefront components are being built around the same
-              intelligence layer. Early integrations are scoped with each
-              merchant, by hand.
+              Planned APIs and website components will support product search
+              and size recommendations. During early access, we work with
+              each brand to review its data and agree on the setup.
             </p>
             <div className="surface-list">
               <span>REST API</span>
@@ -138,7 +139,7 @@ export default async function Page({
               <span>Webhooks</span>
             </div>
             <p className="notice">
-              Public contracts are in development. Shopify and WooCommerce
+              Public APIs and SDKs are in development. Shopify and WooCommerce
               connectors are planned. Request access to discuss your storefront.
             </p>
           </div>
@@ -148,7 +149,7 @@ export default async function Page({
               <span>Illustrative, not a live SDK</span>
             </div>
             <pre>
-              <code>{`// Connect your brand context\nMetr.init({\n  merchantId: "your_brand"\n});\n\n// Bring intent to your storefront\nMetr.openDiscover();\n\n// Product-specific size guidance\n// Built on your approved size charts`}</code>
+              <code>{`// Illustrative setup for your store\nMetr.init({\n  merchantId: "your_brand"\n});\n\n// Open product search\nMetr.openDiscover();\n\n// Product-specific size guidance\n// Built on your approved size charts`}</code>
             </pre>
           </div>
         </section>

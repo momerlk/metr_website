@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { Header, Footer } from "@/components/site";
 import "./globals.css";
 const description =
-  "Metr is AI commerce infrastructure for fashion brands: product discovery and fit intelligence built on one structured reading of your catalog.";
+  "AI search and sizing for fashion stores. Metr shows customers clothes from your catalog and recommends which size to buy using your size charts.";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
   title: {
-    default: "Metr — Commerce, measured.",
+    default: "Metr — AI Search and Sizing for Fashion Stores",
     template: "%s — Metr",
   },
   description,
   openGraph: {
-    title: "Metr — Commerce, measured.",
+    title: "Metr — AI Search and Sizing for Fashion Stores",
     description,
     type: "website",
   },

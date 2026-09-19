@@ -6,7 +6,7 @@ export const examples = [
       ["Occasion", "Dinner"],
       ["Colour", "Black"],
       ["Budget", "< Rs 5,000"],
-      ["Register", "Smart casual"],
+      ["Style", "Smart casual"],
     ],
     products: [
       {
@@ -14,7 +14,7 @@ export const examples = [
         type: "shirt",
         color: "#282824",
         price: "4,200",
-        matched: "colour · budget · register",
+        matched: "colour · budget · style",
       },
       {
         name: "Everyday straight trouser",
@@ -28,7 +28,7 @@ export const examples = [
         type: "tee",
         color: "#30302b",
         price: "2,900",
-        matched: "colour · budget · register",
+        matched: "colour · budget · style",
       },
     ],
     explanation:
@@ -67,7 +67,7 @@ export const examples = [
       },
     ],
     explanation:
-      "Three tees cut oversized or boxy, in sand, stone and chalk. Filtered to the fit attribute, not the word in the title.",
+      "Three tees cut oversized or boxy, in sand, stone and chalk. Selected for their loose cut and neutral colours.",
   },
   {
     short: "Smart, not formal",
@@ -75,7 +75,7 @@ export const examples = [
     intent: [
       ["Request", "Full outfit"],
       ["Colour", "Black"],
-      ["Register", "Smart casual"],
+      ["Style", "Smart casual"],
       ["Fit", "Relaxed"],
     ],
     products: [
@@ -84,21 +84,21 @@ export const examples = [
         type: "shirt",
         color: "#30302c",
         price: "4,600",
-        matched: "colour · register",
+        matched: "colour · style",
       },
       {
         name: "Tailored relaxed trouser",
         type: "trousers",
         color: "#282824",
         price: "4,900",
-        matched: "colour · register · fit",
+        matched: "colour · style · fit",
       },
       {
         name: "Minimal cotton shirt",
         type: "shirt",
         color: "#20201e",
         price: "3,800",
-        matched: "colour · register",
+        matched: "colour · style",
       },
     ],
     explanation:

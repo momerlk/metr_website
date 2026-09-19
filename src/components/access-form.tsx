@@ -39,7 +39,7 @@ export function AccessForm() {
         <h2>Request received.</h2>
         <p>
           We’ll review your storefront and get in touch if Metr is a fit for the
-          V1 program.
+          early-access program.
         </p>
         <Link href="/" className="text-link">
           Back to Metr <span aria-hidden="true">→</span>
@@ -115,9 +115,9 @@ export function AccessForm() {
       <label className="full-field">
         Interested in
         <select name="interest" defaultValue="Both" required>
-          <option>Both</option>
-          <option>Discover</option>
-          <option>Fit</option>
+          <option value="Both">Product search and size recommendations</option>
+          <option value="Discover">Discover — Product search</option>
+          <option value="Fit">Fit — Size recommendations</option>
         </select>
       </label>
       <label className="full-field">

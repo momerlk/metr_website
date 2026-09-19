@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-export const alt = "Metr — Commerce, measured.";
+export const alt = "Metr — AI search and sizing for fashion stores.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default function Image() {
@@ -26,19 +26,22 @@ export default function Image() {
         }}
       >
         <span>metr</span>
-        <span>AI commerce infrastructure for fashion brands</span>
+        <span>Early access</span>
       </div>
       <div
         style={{
-          fontSize: 110,
-          letterSpacing: -5,
+          fontSize: 88,
+          letterSpacing: -3,
           lineHeight: 1,
           display: "flex",
           flexDirection: "column",
         }}
       >
-        <span>Commerce,</span>
-        <span>measured.</span>
+        <span>AI search and sizing</span>
+        <span>for fashion stores.</span>
+      </div>
+      <div style={{ fontSize: 28 }}>
+        Help customers find what to buy and in which size.
       </div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 0 }}>
         {Array.from({ length: 61 }, (_, i) => (

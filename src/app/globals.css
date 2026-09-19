@@ -7,8 +7,8 @@ live reading (recommended size, active tab, scroll needle). Satoshi for
 prose, a mono face only where a number or label is a measurement.
 STORY: a fashion brand sees its catalog and its customer read by the same
 instrument, believes the results are grounded, and requests access.
-FIRST VIEWPORT: kicker, two-line headline with a live px dimension under
-it, one paragraph, primary CTA; Discover demo at right doing a reading.
+FIRST VIEWPORT: product category and audience, a clear tagline, a concrete
+explanation, primary CTA; Discover preview at right.
 FORM: tech-pack / tailor's rule, brief-pinned; no seed rolled.
 */
 @font-face {
@@ -361,6 +361,10 @@ h3 {
   min-width: 7ch;
 }
 /* Hero */
+.hero h1 {
+  font-size: clamp(38px, 4.3vw, 64px);
+  line-height: 1.06;
+}
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
@@ -372,7 +376,15 @@ h3 {
   font-size: 19px;
   max-width: 29em;
   line-height: 1.65;
-  margin: 32px 0 36px;
+  margin: 16px 0 32px;
+}
+.hero-copy > .hero-tagline {
+  color: var(--text);
+  font-size: clamp(20px, 1.7vw, 24px);
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 28px 0 0;
+  text-wrap: pretty;
 }
 .hero-actions {
   display: flex;
@@ -694,6 +706,10 @@ h3 {
   background: var(--brass-tint);
   box-shadow: inset 0 2px 0 var(--brass);
 }
+.demo-instruction {
+  padding-top: 20px;
+  padding-bottom: 0;
+}
 /* Fit demo */
 .fit-body {
   display: grid;
@@ -907,7 +923,7 @@ h3 {
   border-bottom: 1px solid var(--line);
 }
 .closing h2 {
-  font-size: clamp(52px, 8vw, 112px);
+  font-size: clamp(40px, 5.6vw, 80px);
   letter-spacing: -0.045em;
 }
 .closing p {
