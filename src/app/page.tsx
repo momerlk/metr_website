@@ -17,8 +17,8 @@ export default function Home() {
             </h1>
           </Measured>
           <p>
-            Metr reads your catalog and your shopper, then closes the distance
-            between them: what they mean, what you sell, and what will fit.
+            Metr reads your catalog and your customer, then closes the distance
+            between them: what they want, what you sell, and what will fit.
           </p>
           <div className="hero-actions">
             <CTA />
@@ -39,7 +39,7 @@ export default function Home() {
             and brand.
           </li>
           <li>
-            <b>Discover</b> Shoppers ask in their own words. They get what you
+            <b>Discover</b> Customers ask in their own words. They get what you
             actually sell.
           </li>
           <li>
@@ -50,20 +50,20 @@ export default function Home() {
       <section className="section wrap problem" id="platform">
         <div className="section-heading">
           <h2>
-            Shoppers speak in intent.
+            Customers speak in intent.
             <br />
             Catalogs speak in attributes.
           </h2>
           <p>
             Search runs on keywords. Size charts run on interpretation. Product
             data runs on whoever typed it last. Metr takes one structured
-            reading of your catalog and puts it to work at the moment a shopper
+            reading of your catalog and puts it to work at the moment a customer
             decides.
           </p>
         </div>
         <div className="bridge">
           <div>
-            <span className="reading-label">Shopper</span>
+            <span className="reading-label">Customer</span>
             <p className="bridge-quote">
               “Something for a slow summer weekend.”
             </p>
@@ -115,7 +115,7 @@ export default function Home() {
           <Label>Metr Discover</Label>
           <h2>Search that reads intent, not keywords.</h2>
           <p>
-            A shopper describes what they want. Metr works out the occasion,
+            A customer describes what they want. Metr works out the occasion,
             budget, colour and register behind it, retrieves from your live
             catalog, and explains why each product made the cut.
           </p>
@@ -148,7 +148,7 @@ export default function Home() {
           </h2>
           <p>
             Metr Fit reads the garment’s own points of measure against the
-            shopper’s usual size and how they like clothes to sit. It
+            customer’s usual size and how they like clothes to sit. It
             recommends one size and says how it will fit, area by area.
           </p>
           <p className="muted-copy">

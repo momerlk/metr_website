@@ -89,12 +89,12 @@ export default async function Page({
           <p>
             A fashion catalog holds a lot of measurement already: sizes, points
             of measure, materials, stock, the words a brand uses for its own
-            cuts. Most of it never reaches the shopper in a form they can use.
+            cuts. Most of it never reaches the customer in a form they can use.
           </p>
           <h2>Measurement at the point of decision.</h2>
           <p>
             Metr takes one structured reading of that data and applies it where
-            a shopper decides. What do they mean? Which products match? Which
+            a customer decides. What do they mean? Which products match? Which
             size will sit the way they like?
           </p>
           <p>

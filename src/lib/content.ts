@@ -3,11 +3,11 @@ export const productPages = {
     label: "Metr Discover",
     title: "Your catalog, read through intent.",
     description:
-      "Shoppers describe what they want in their own words. Metr works out what they mean, retrieves from your live catalog, and explains each match.",
+      "Customers describe what they want in their own words. Metr works out what they mean, retrieves from your live catalog, and explains each match.",
     steps: [
       [
         "Understand",
-        "A natural request becomes structured intent: occasion, budget, colour, fit, register and the things the shopper did not say.",
+        "A natural request becomes structured intent: occasion, budget, colour, fit, register and the things the customer did not say.",
       ],
       [
         "Retrieve",
@@ -19,7 +19,7 @@ export const productPages = {
       ],
       [
         "Explain",
-        "Each result comes with the reason it matched, and room for the shopper to refine.",
+        "Each result comes with the reason it matched, and room for the customer to refine.",
       ],
     ],
   },
@@ -27,14 +27,14 @@ export const productPages = {
     label: "Metr Fit",
     title: "Size charts, turned into a decision.",
     description:
-      "Metr Fit reads a garment’s own points of measure against the shopper’s usual size and preferred fit, then recommends one size and says how it will sit.",
+      "Metr Fit reads a garment’s own points of measure against the customer’s usual size and preferred fit, then recommends one size and says how it will sit.",
     steps: [
       [
         "Product-specific",
         "A medium is not a medium across your range. Fit evaluates sizing in the context of the actual garment’s chart.",
       ],
       [
-        "Shopper-specific",
+        "Customer-specific",
         "Usual size, preferred fit and, where a product needs it, a few body-profile inputs. No more than the garment requires.",
       ],
       [

@@ -110,7 +110,7 @@ export function DiscoverDemo({ large = false }: { large?: boolean }) {
       </div>
       <div className="demo-body" key={selected}>
         <div className="demo-query">
-          <span className="reading-label">Shopper asks</span>
+          <span className="reading-label">Customer asks</span>
           <p>“{item.query}”</p>
         </div>
         <dl className="reading">
@@ -257,7 +257,7 @@ export function FitDemo() {
       </div>
       <p className="demo-note">
         Illustrative. Real recommendations use the merchant’s approved chart
-        and the shopper’s own inputs.
+        and the customer’s own inputs.
       </p>
     </div>
   );
