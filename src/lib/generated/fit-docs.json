@@ -1,0 +1,950 @@
+[
+  {
+    "slug": "",
+    "title": "Metr Fit for developers",
+    "description": "Add product-specific size recommendations to an online store through a REST API.",
+    "sections": [
+      {
+        "title": "What the API does",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "You send your product catalog, available variants and approved size charts. Your backend requests a questionnaire, submits customer answers and receives a size recommendation with confidence, fit details and an explanation. All customer-facing requests go through your own backend."
+          },
+          {
+            "type": "list",
+            "items": [
+              "One merchant can own multiple stores. Every resource is isolated by merchant and store.",
+              "The V1 engine uses deterministic rules. It never asks an LLM to invent sizes or body measurements.",
+              "Adult tops, bottoms, dresses/one-piece garments and supported shoe charts are covered. Unsupported products return an explicit error.",
+              "Confidence is an uncalibrated evidence score, not a probability of fit or a measured accuracy claim."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Start here",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Follow the Quickstart, then read Authentication and Integration flow before putting Fit on a product page. The API Reference below is generated from the Go route registry and wire types, not a proposed SDK."
+          },
+          {
+            "type": "code",
+            "text": "export METR_API_URL=http://localhost:8080\n# Run the API repository locally first. Use HTTPS for a deployed service.\npython3 scripts/demo.py",
+            "language": "bash"
+          }
+        ]
+      },
+      {
+        "title": "Version and deployment",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "All product endpoints use /v1. Deploy your own API from metr_api; this documentation does not imply a shared hosted endpoint. Health checks are /healthz and /readyz. The OpenAPI contract is available at /v1/openapi.json on your deployment."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "quickstart",
+    "title": "Your first size recommendation",
+    "description": "Create a merchant, connect a store and complete one sizing session.",
+    "sections": [
+      {
+        "title": "0. Run the complete example",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "In the metr_api repository, copy .env.example to .env, replace the local database password and bootstrap key, then run docker compose up --build. Set BOOTSTRAP_KEY in your shell to the same local value. The standard-library Python example creates fictional tops, trousers, a dress and shoes, runs the quiz, accepts each recommendation and reports purchases and return/kept outcomes."
+          },
+          {
+            "type": "code",
+            "text": "docker compose up --build\n# In another terminal, load BOOTSTRAP_KEY securely from your local .env.\nexport METR_API_URL=http://localhost:8080\npython3 scripts/demo.py",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "The requests below show that flow step by step. Set STORE_ID, CHART_ID, PRODUCT_ID and SESSION_ID from each response. Replace placeholder IDs inside JSON bodies before sending; single-quoted JSON does not expand shell variables."
+          }
+        ]
+      },
+      {
+        "title": "1. Create a merchant",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Only the Metr operator uses the bootstrap credential. A store developer receives a merchant admin key through a secure channel; they must never receive the operator key. The response contains merchant.id and api_key.secret. Save that secret as METR_API_KEY; it is returned only once."
+          },
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/merchants\" \\\n  -H \"Authorization: Bearer $BOOTSTRAP_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"name\": \"Example Fashion\"\n}'",
+            "language": "bash"
+          }
+        ]
+      },
+      {
+        "title": "2. Connect a store",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"name\": \"Example store\",\n  \"domain\": \"https://shop.example.com\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Save the returned id as STORE_ID. Create a store-scoped backend key with catalog, fit and events permissions for the integration; keep the merchant admin key in your operator tooling."
+          }
+        ]
+      },
+      {
+        "title": "3. Add the approved size chart",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "This example uses full garment chest circumferences. Customer answers are body centimetres. The merchant must check the measurements before setting verified=true."
+          },
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/size-charts\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"name\": \"Shirt chart\",\n  \"category\": \"tops\",\n  \"unit\": \"cm\",\n  \"basis\": \"garment\",\n  \"verified\": true,\n  \"measurements\": [\n    {\n      \"name\": \"chest\",\n      \"method\": \"circumference\"\n    }\n  ],\n  \"rows\": [\n    {\n      \"size\": \"S\",\n      \"measurements\": {\n        \"chest\": {\n          \"min\": 100,\n          \"max\": 100\n        }\n      }\n    },\n    {\n      \"size\": \"M\",\n      \"measurements\": {\n        \"chest\": {\n          \"min\": 104,\n          \"max\": 104\n        }\n      }\n    },\n    {\n      \"size\": \"L\",\n      \"measurements\": {\n        \"chest\": {\n          \"min\": 108,\n          \"max\": 108\n        }\n      }\n    }\n  ]\n}'",
+            "language": "bash"
+          }
+        ]
+      },
+      {
+        "title": "4. Sync a product and variants",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/products\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"external_id\": \"linen-shirt\",\n  \"title\": \"Linen camp-collar shirt\",\n  \"product_type\": \"shirt\",\n  \"gender\": \"unisex\",\n  \"garment_fit\": \"regular\",\n  \"stretch\": \"none\",\n  \"size_chart_id\": \"REPLACE_WITH_CHART_ID\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/products/$PRODUCT_ID/variants\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"external_id\": \"shirt-m-black\",\n  \"size\": \"M\",\n  \"color\": \"black\",\n  \"available\": true\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Create S and L variants in the same way if they are available. Save the product id as PRODUCT_ID. Variant sizes must exactly match chart labels."
+          }
+        ]
+      },
+      {
+        "title": "5. Request the questionnaire and start a session",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X GET \"$METR_API_URL/v1/stores/$STORE_ID/products/$PRODUCT_ID/fit-questionnaire\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\"",
+            "language": "bash"
+          },
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"product_id\": \"REPLACE_WITH_PRODUCT_ID\",\n  \"color\": \"black\",\n  \"customer_reference\": \"opaque-customer-reference\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Use the questionnaire returned by session creation to render the quiz. It is frozen with that session\u2019s chart revision. Save id as SESSION_ID."
+          }
+        ]
+      },
+      {
+        "title": "6. Submit answers",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions/$SESSION_ID/recommendations\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"answers\": {\n    \"usual_size\": \"M\",\n    \"size_consistency\": \"consistent\",\n    \"preferred_fit\": \"regular\",\n    \"measurements\": {\n      \"chest\": 98\n    }\n  }\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "The response includes recommended_size, eligible variant_ids, confidence, per-area fit and explanation. Render the result and let the customer choose."
+          }
+        ]
+      },
+      {
+        "title": "7. Record the choice and outcome",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions/$SESSION_ID/complete\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"decision\": \"accepted\",\n  \"chosen_variant_id\": \"REPLACE_WITH_RECOMMENDED_VARIANT_ID\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/events\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"external_id\": \"order-123-line-1-purchase\",\n  \"source\": \"custom-store\",\n  \"type\": \"purchase\",\n  \"product_id\": \"REPLACE_WITH_PRODUCT_ID\",\n  \"variant_id\": \"REPLACE_WITH_PURCHASED_VARIANT_ID\",\n  \"session_id\": \"REPLACE_WITH_SESSION_ID\",\n  \"order_id\": \"order-123\",\n  \"line_item_id\": \"line-1\",\n  \"quantity\": 1,\n  \"occurred_at\": \"REPLACE_WITH_CURRENT_RFC3339_TIMESTAMP\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Purchase events come from your backend after a confirmed order. Include the same product, order and line IDs on later returns or exchanges. The demo supplies current timestamps automatically."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "authentication",
+    "title": "Authentication and store isolation",
+    "description": "Keep Metr credentials on your server and use the smallest scope each integration needs.",
+    "sections": [
+      {
+        "title": "Three levels of access",
+        "blocks": [
+          {
+            "type": "table",
+            "columns": [
+              "Credential",
+              "Purpose"
+            ],
+            "rows": [
+              [
+                "Operator bootstrap key",
+                "POST /v1/merchants only. Stored outside merchant integrations."
+              ],
+              [
+                "Merchant admin key",
+                "Create stores, manage keys and access the merchant\u2019s resources."
+              ],
+              [
+                "Store-scoped key",
+                "Only its named store and granted scopes. Never another store."
+              ]
+            ]
+          },
+          {
+            "type": "code",
+            "text": "Authorization: Bearer YOUR_SECRET_API_KEY",
+            "language": "http"
+          },
+          {
+            "type": "paragraph",
+            "text": "API keys are returned once and stored as SHA-256 digests. There is no login endpoint or token refresh flow. Create a replacement key before revoking an old key."
+          }
+        ]
+      },
+      {
+        "title": "Issue a scoped key",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/api-keys\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"name\": \"Store integration\",\n  \"store_id\": \"REPLACE_WITH_STORE_ID\",\n  \"scopes\": [\n    \"catalog\",\n    \"fit\",\n    \"events\",\n    \"analytics\"\n  ]\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Scope",
+              "Access"
+            ],
+            "rows": [
+              [
+                "admin",
+                "Merchant administration, or resource administration limited to a named store. Store-bound admin cannot issue keys or create stores."
+              ],
+              [
+                "catalog",
+                "Products, variants, size charts and product types."
+              ],
+              [
+                "fit",
+                "Questionnaires, sessions, recommendations and decisions."
+              ],
+              [
+                "events",
+                "Send and read customer/order events."
+              ],
+              [
+                "analytics",
+                "Read descriptive cohort metrics."
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "Non-admin keys must specify store_id. Optional expires_at must be a future RFC3339 timestamp within one year. Key issuance and listing require an unrestricted merchant admin key."
+          }
+        ]
+      },
+      {
+        "title": "Revocation",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X DELETE \"$METR_API_URL/v1/api-keys/$KEY_ID\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\"",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Revoked keys immediately receive 401. A key cannot revoke itself. Create or use another admin key for rotation."
+          }
+        ]
+      },
+      {
+        "title": "Browser and integration safety",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Do not put secret keys in themes, browser JavaScript, mobile apps, URLs or analytics. Your backend must authorize the customer\u2019s session before forwarding answers. Validate webhook signatures in your integration before forwarding purchase/return events. A future Shopify adapter will implement that platform-specific layer; it is not part of V1."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "products",
+    "title": "Products and variants",
+    "description": "Tell Metr which item is being sized and which sizes are available to buy.",
+    "sections": [
+      {
+        "title": "Product contract",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/products\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"external_id\": \"linen-shirt\",\n  \"title\": \"Linen camp-collar shirt\",\n  \"product_type\": \"shirt\",\n  \"gender\": \"unisex\",\n  \"garment_fit\": \"regular\",\n  \"stretch\": \"none\",\n  \"size_chart_id\": \"cht_example\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Field",
+              "Meaning"
+            ],
+            "rows": [
+              [
+                "external_id",
+                "Your catalog identifier; unique within a store, up to 128 characters."
+              ],
+              [
+                "product_type",
+                "A supported type from GET /v1/product-types."
+              ],
+              [
+                "gender",
+                "women, men or unisex. Adult product metadata, not a customer inference."
+              ],
+              [
+                "garment_fit",
+                "fitted, regular, relaxed or oversized."
+              ],
+              [
+                "stretch",
+                "none, moderate or high. Not an invented stretch percentage."
+              ],
+              [
+                "size_chart_id",
+                "An approved, category-compatible chart from the same store."
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Supported categories",
+        "blocks": [
+          {
+            "type": "table",
+            "columns": [
+              "Category",
+              "Examples",
+              "Required chart measurements"
+            ],
+            "rows": [
+              [
+                "tops",
+                "t_shirt, shirt, kurta, sweater, jacket",
+                "chest"
+              ],
+              [
+                "bottoms",
+                "trousers, jeans, shorts, skirt",
+                "waist and hips"
+              ],
+              [
+                "one_piece",
+                "dress, jumpsuit",
+                "chest, waist and hips"
+              ],
+              [
+                "footwear",
+                "shoes",
+                "foot_length on a body chart"
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "accessory is recognized but does not support recommendations. Children\u2019s products, bras and separately sized multi-piece sets need a different model and are not supported by V1."
+          }
+        ]
+      },
+      {
+        "title": "Available variants",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/products/$PRODUCT_ID/variants\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"external_id\": \"linen-shirt-M\",\n  \"size\": \"M\",\n  \"color\": \"black\",\n  \"available\": true\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "A variant ID belongs to one product, merchant and store. Size labels match chart rows exactly, including case. Multiple colors can share one size. Send color when starting a session to recommend only variants of that color."
+          }
+        ]
+      },
+      {
+        "title": "Keep inventory current",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Use PUT on the product or variant resource to replace its documented input fields. Set available=false as soon as a variant is unavailable. Variant size and color are immutable; create a new variant if either changes. Chart-backed recommendations never invent a size that is absent from current available inventory. An already-returned recommendation is historical, so recheck stock before adding to cart."
+          },
+          {
+            "type": "paragraph",
+            "text": "List endpoints return data and optional next_cursor. Use ?limit=50&cursor=LAST_CURSOR. The maximum page size is 100. Creation is not generally idempotent: use your external_id and the list/get/PUT flow to reconcile interrupted catalog syncs."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "size-charts",
+    "title": "Size charts and measurements",
+    "description": "Explicit units and measurement definitions prevent ambiguous size matching.",
+    "sections": [
+      {
+        "title": "Create a chart",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/size-charts\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"name\": \"Linen camp-collar shirt approved chart\",\n  \"category\": \"tops\",\n  \"unit\": \"cm\",\n  \"basis\": \"garment\",\n  \"verified\": true,\n  \"measurements\": [\n    {\n      \"name\": \"chest\",\n      \"method\": \"flat_width\"\n    },\n    {\n      \"name\": \"shoulders\",\n      \"method\": \"linear\"\n    },\n    {\n      \"name\": \"length\",\n      \"method\": \"linear\"\n    }\n  ],\n  \"rows\": [\n    {\n      \"size\": \"S\",\n      \"measurements\": {\n        \"chest\": {\n          \"min\": 50,\n          \"max\": 50\n        },\n        \"shoulders\": {\n          \"min\": 44,\n          \"max\": 44\n        },\n        \"length\": {\n          \"min\": 68,\n          \"max\": 68\n        }\n      }\n    },\n    {\n      \"size\": \"M\",\n      \"measurements\": {\n        \"chest\": {\n          \"min\": 52,\n          \"max\": 52\n        },\n        \"shoulders\": {\n          \"min\": 46,\n          \"max\": 46\n        },\n        \"length\": {\n          \"min\": 70,\n          \"max\": 70\n        }\n      }\n    },\n    {\n      \"size\": \"L\",\n      \"measurements\": {\n        \"chest\": {\n          \"min\": 54,\n          \"max\": 54\n        },\n        \"shoulders\": {\n          \"min\": 48,\n          \"max\": 48\n        },\n        \"length\": {\n          \"min\": 72,\n          \"max\": 72\n        }\n      }\n    }\n  ]\n}'",
+            "language": "bash"
+          }
+        ]
+      },
+      {
+        "title": "Measurement rules",
+        "blocks": [
+          {
+            "type": "table",
+            "columns": [
+              "Field",
+              "Allowed values / rule"
+            ],
+            "rows": [
+              [
+                "unit",
+                "cm or in. The engine normalizes both to centimetres."
+              ],
+              [
+                "basis",
+                "body = body-size range; garment = actual garment dimensions."
+              ],
+              [
+                "method",
+                "circumference, flat_width or linear, declared per measurement."
+              ],
+              [
+                "flat_width",
+                "Only garment chest, waist, hips and thigh; doubled to circumference."
+              ],
+              [
+                "linear",
+                "Shoulders, sleeve, length, rise, inseam and foot length; never doubled."
+              ],
+              [
+                "rows",
+                "1\u201330 unique sizes, ordered smallest to largest by primary measurements."
+              ],
+              [
+                "verified",
+                "Set true only after the merchant checks the chart. Draft charts cannot generate recommendations."
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "Every row must contain every declared measurement. min and max form an inclusive range; equal values describe one measurement. Do not send an image or HTML table: normalize the approved values first."
+          }
+        ]
+      },
+      {
+        "title": "Category and approval",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "A chart\u2019s category must match the product type. Footwear uses a body foot-length chart; a shoe\u2019s outside dimensions are not a body measurement. Charts missing primary body areas are rejected. The API validates structure and ranges, but merchant verification is still required to establish that the values describe the actual garment."
+          }
+        ]
+      },
+      {
+        "title": "Updating charts",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "PUT /v1/stores/{store_id}/size-charts/{chart_id} replaces the input fields and increments revision. Category cannot change. Existing sessions retain their original chart snapshot; new sessions use the new revision. Sizes removed from a chart will no longer be candidates for new sessions."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "questionnaires",
+    "title": "Product-specific questionnaires",
+    "description": "Render the questions returned by the API instead of hardcoding one quiz for every garment.",
+    "sections": [
+      {
+        "title": "Get the questions",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X GET \"$METR_API_URL/v1/stores/$STORE_ID/products/$PRODUCT_ID/fit-questionnaire\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\"",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Optional ?color=black restricts available_sizes to that exact variant color. This endpoint previews the current chart. Session creation returns the frozen questionnaire to use for actual answers."
+          }
+        ]
+      },
+      {
+        "title": "Question shape",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "{\n  \"id\": \"usual_size\",\n  \"label\": \"What size do you usually wear for this product type?\",\n  \"type\": \"single_select\",\n  \"required\": true,\n  \"options\": [\n    \"S\",\n    \"M\",\n    \"L\",\n    \"unknown\"\n  ]\n}",
+            "language": "json"
+          },
+          {
+            "type": "paragraph",
+            "text": "Use id as the answer key, label as the visible question, options for choice inputs, and min/max/unit for numbers. Question IDs beginning measurements. map into the answers.measurements object. Send usual_size=unknown when the customer cannot provide it, then require at least one primary body measurement."
+          }
+        ]
+      },
+      {
+        "title": "What gets asked",
+        "blocks": [
+          {
+            "type": "list",
+            "items": [
+              "Usual size and size consistency are required. Apparel also asks preferred_fit (close, regular or loose).",
+              "Tops can ask about chest and shoulders; bottoms about waist and hips; one-piece garments combine their relevant areas. Questions only appear for measurements supported by the chart.",
+              "Body profiles are optional narrow/average/broad tie-breakers. They never become invented dimensions.",
+              "Height is optional only for length-bearing charts. It explains length uncertainty and does not estimate inseam or torso length.",
+              "Optional precise body measurements are in centimetres, even if the merchant chart uses inches.",
+              "Weight and customer gender are not requested: this model has no validated use for them. Footwear only asks relevant foot-length information."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Quiz completion",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "A session starts with POST /fit-sessions and expires after 24 hours. The API records fit_started. Submitting valid answers and receiving a recommendation records fit_completed and recommendation_generated atomically. A customer can redo the quiz by creating a new session."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "recommendations",
+    "title": "Size recommendations",
+    "description": "Submit answers once and return the recommended size, supporting evidence and limitations.",
+    "sections": [
+      {
+        "title": "Generate a recommendation",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions/$SESSION_ID/recommendations\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"answers\": {\n    \"usual_size\": \"M\",\n    \"size_consistency\": \"consistent\",\n    \"preferred_fit\": \"regular\",\n    \"measurements\": {\n      \"chest\": 98,\n      \"shoulders\": 45\n    }\n  }\n}'",
+            "language": "bash"
+          }
+        ]
+      },
+      {
+        "title": "Response",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "{\n  \"id\": \"rec_example\",\n  \"session_id\": \"fit_example\",\n  \"recommended_size\": \"M\",\n  \"variant_ids\": [\n    \"var_medium\"\n  ],\n  \"confidence\": 0.86,\n  \"confidence_meaning\": \"uncalibrated_evidence_score\",\n  \"fit\": {\n    \"chest\": \"comfortable\",\n    \"length\": \"unknown\",\n    \"shoulders\": \"close\"\n  },\n  \"evidence\": {\n    \"chest\": {\n      \"source\": \"measurement\",\n      \"body_cm\": 98,\n      \"chart_min_cm\": 104,\n      \"chart_max_cm\": 104\n    },\n    \"length\": {\n      \"source\": \"not_provided\",\n      \"chart_min_cm\": 70,\n      \"chart_max_cm\": 70\n    },\n    \"shoulders\": {\n      \"source\": \"measurement\",\n      \"body_cm\": 45,\n      \"chart_min_cm\": 46,\n      \"chart_max_cm\": 46\n    }\n  },\n  \"explanation\": \"M is the closest available match to your supplied measurements and preferred fit. Check the garment measurements before buying.\",\n  \"warnings\": [\n    \"Confidence is an uncalibrated evidence score, not a probability of fit.\"\n  ],\n  \"algorithm_version\": \"fit-rules-1.0.0\",\n  \"chart_id\": \"cht_example\",\n  \"chart_revision\": 1,\n  \"created_at\": \"2026-09-20T12:00:00Z\"\n}",
+            "language": "json"
+          },
+          {
+            "type": "paragraph",
+            "text": "variant_ids contains currently available variants matching the recommended chart size and session color. Fit is unknown for body areas without a supplied measurement. Body charts describe below_range, within_range or above_range; garment charts describe the estimated ease or length relationship."
+          }
+        ]
+      },
+      {
+        "title": "What confidence means",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "confidence is an uncalibrated evidence score between 0 and 1, not the probability a size will fit. Missing primary measurements, inconsistent usual sizing, weak separation between candidates and stretch uncertainty reduce the evidence. Usual-size-only suggestions are capped at 0.55. Do not turn this number into a \u201891% accurate\u2019 claim."
+          }
+        ]
+      },
+      {
+        "title": "Record the decision",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions/$SESSION_ID/complete\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"decision\": \"accepted\",\n  \"chosen_variant_id\": \"var_medium\"\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "list",
+            "items": [
+              "accepted: selected variant has the recommended size.",
+              "overridden: selected variant has a different available size for the same product and session color.",
+              "declined: no chosen_variant_id; the customer did not select a recommendation."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Retries and fallback",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Identical recommendation retries return the same persisted response. Changed answers return 409: start another session. Identical completion retries are also safe. Recommendations do not reserve stock. Recheck availability before adding to cart. On no_suitable_size, missing approval, insufficient evidence, timeout or an unavailable service, show the merchant\u2019s size chart and keep checkout available."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "events",
+    "title": "Events and commercial outcomes",
+    "description": "Connect quiz behavior to later order outcomes without claiming that correlation proves impact.",
+    "sections": [
+      {
+        "title": "Automatically recorded",
+        "blocks": [
+          {
+            "type": "table",
+            "columns": [
+              "Event",
+              "When"
+            ],
+            "rows": [
+              [
+                "fit_started",
+                "Session created."
+              ],
+              [
+                "fit_completed",
+                "Valid answers produced a recommendation."
+              ],
+              [
+                "recommendation_generated",
+                "Recommendation persisted."
+              ],
+              [
+                "recommendation_accepted",
+                "Session completed with the recommended size."
+              ],
+              [
+                "recommendation_overridden",
+                "Session completed with a different size."
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "Do not send these to POST /events; the API records them transactionally. This prevents retries from inflating quiz and decision counts."
+          }
+        ]
+      },
+      {
+        "title": "Send storefront and order outcomes",
+        "blocks": [
+          {
+            "type": "list",
+            "items": [
+              "fit_viewed: the customer sees the size-help entry point.",
+              "add_to_cart and checkout_started: send from the storefront integration through your backend.",
+              "purchase: send from the backend after a confirmed order.",
+              "return_requested and size_exchange: include reason=size or other.",
+              "item_kept: an explicit verified signal; never infer it from missing return data."
+            ]
+          },
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/events\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"external_id\": \"order-123-line-1-return\",\n  \"source\": \"custom-store\",\n  \"type\": \"return_requested\",\n  \"product_id\": \"prd_example\",\n  \"variant_id\": \"var_medium\",\n  \"session_id\": \"fit_example\",\n  \"order_id\": \"order-123\",\n  \"line_item_id\": \"line-1\",\n  \"reason\": \"size\",\n  \"quantity\": 1,\n  \"occurred_at\": \"REPLACE_WITH_CURRENT_RFC3339_TIMESTAMP\"\n}'",
+            "language": "bash"
+          }
+        ]
+      },
+      {
+        "title": "Identity, attribution and retries",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Use stable external_id values for deliveries. The uniqueness boundary is merchant + store + source + external_id. Identical retries return 200 and the original event; changed payloads return 409. First delivery returns 201. occurred_at must be within the previous year and no more than five minutes ahead."
+          },
+          {
+            "type": "paragraph",
+            "text": "Order outcomes require product_id, variant_id, order_id and line_item_id. Keep order/line IDs stable across purchase, return, exchange and kept signals. session_id is optional for unassisted purchases and delayed outcomes, but include it on a Fit-assisted purchase. If supplied, it must belong to the same product and store. Never attach an event that predates the session."
+          }
+        ]
+      },
+      {
+        "title": "Metrics and denominators",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "GET /v1/stores/{store_id}/metrics accepts from/to RFC3339 timestamps. It selects sessions created in [from,to) and observes linked outcomes through the response\u2019s observed_through time. Maximum range: 366 days. Default: last 30 days. Metrics count unique sessions and purchased order lines, not units."
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Rate",
+              "Numerator / denominator"
+            ],
+            "rows": [
+              [
+                "Quiz completion",
+                "Recommended sessions / started sessions"
+              ],
+              [
+                "Recommendation acceptance",
+                "Accepted sessions / recommended sessions"
+              ],
+              [
+                "Recommendation override",
+                "Overridden sessions / recommended sessions"
+              ],
+              [
+                "Fit-assisted conversion",
+                "Recommended sessions with a linked purchase / recommended sessions"
+              ],
+              [
+                "Size-related return",
+                "Purchased lines with a size return / Fit-assisted purchased lines"
+              ],
+              [
+                "Kept after recommendation",
+                "Purchased lines with an explicit kept signal / Fit-assisted purchased lines"
+              ],
+              [
+                "Exchange for size",
+                "Purchased lines with a size exchange / Fit-assisted purchased lines"
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "A zero denominator returns null. Return and kept windows may be immature, and missing integration events bias rates. Different outcomes may apply to one line over time. These descriptive cohorts do not establish causal conversion lift or return reduction. Use a properly designed randomized experiment for causal claims."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "errors",
+    "title": "Errors and recovery",
+    "description": "Every API error includes a stable code, a readable message and a request ID.",
+    "sections": [
+      {
+        "title": "Error shape",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "{\n  \"error\": {\n    \"code\": \"no_suitable_size\",\n    \"message\": \"No available size is a reasonable match. Check the size chart or contact the store.\",\n    \"request_id\": \"req_example\"\n  }\n}",
+            "language": "json"
+          }
+        ]
+      },
+      {
+        "title": "HTTP status codes",
+        "blocks": [
+          {
+            "type": "table",
+            "columns": [
+              "Status",
+              "Meaning / action"
+            ],
+            "rows": [
+              [
+                "400",
+                "Malformed JSON, duplicate/unknown fields, or invalid query. Fix the request."
+              ],
+              [
+                "401",
+                "Missing, revoked or expired API key."
+              ],
+              [
+                "403",
+                "Key lacks the scope or is restricted to a different store."
+              ],
+              [
+                "404",
+                "Resource does not exist inside this tenant/store."
+              ],
+              [
+                "405",
+                "Wrong HTTP method; check Allow header."
+              ],
+              [
+                "409",
+                "Duplicate identifier, conflicting retry or invalid session transition."
+              ],
+              [
+                "410",
+                "Session expired; create a new one."
+              ],
+              [
+                "413 / 415",
+                "Body over 256 KiB / use application/json."
+              ],
+              [
+                "422",
+                "Invalid values, chart mismatch or sizing abstention. Show a chart fallback where appropriate."
+              ],
+              [
+                "429",
+                "Rate limited. Respect Retry-After; default is 300 requests/minute/key."
+              ],
+              [
+                "500 / 503",
+                "Internal/dependency failure. Retry safe operations with bounded backoff."
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Sizing-specific codes",
+        "blocks": [
+          {
+            "type": "list",
+            "items": [
+              "unsupported_product: this category is not supported.",
+              "unverified_chart: attach and approve a chart first.",
+              "no_available_sizes: no current variants match chart rows and chosen color.",
+              "insufficient_evidence: provide a usual size or primary body measurement.",
+              "invalid_answers: an answer is invalid or irrelevant for this product.",
+              "no_suitable_size: the available sizes are too poor a match; do not force a size."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Safe retries",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "GET operations, identical recommendation/completion requests and identical event deliveries can be retried. Merchant/product/chart/session creation does not have automatic idempotency: reconcile state before retrying. Retry-After is returned for 429. Keep the request ID for support; never log API keys or body measurements."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "api-reference",
+    "title": "API reference",
+    "description": "The complete REST contract, generated from the implementation.",
+    "sections": [
+      {
+        "title": "Read the contract",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The operation list, request schemas and response schemas below are generated from the API\u2019s route registry and Go wire types. Download the OpenAPI 3.1 document to import it into your client generator or API tool. Replace the local server URL with your own deployed API."
+          }
+        ]
+      },
+      {
+        "title": "Common conventions",
+        "blocks": [
+          {
+            "type": "list",
+            "items": [
+              "Bearer authentication uses operator or merchant/store keys as indicated per operation.",
+              "All bodies are JSON objects; unknown and duplicate fields are rejected.",
+              "Lists use limit (1\u2013100) and cursor, returning data and optional next_cursor.",
+              "IDs are opaque. Never derive tenant identity from a request body.",
+              "PUT replaces the documented input fields; it is not a partial PATCH.",
+              "The request body maximum is 256 KiB. API version: /v1."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "integration-flow",
+    "title": "Integrate Fit into your store",
+    "description": "Keep customer authorization, inventory and order truth in your ecommerce backend.",
+    "sections": [
+      {
+        "title": "1. Connect your catalog",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Obtain a merchant key, create a store and issue store-scoped backend keys. Sync products, verified charts and variants. Maintain stable external identifiers and keep availability current. Complete the Quickstart with fictional data before connecting a real store."
+          }
+        ]
+      },
+      {
+        "title": "2. Put the quiz on the product page",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Render a \u2018Find my size\u2019 entry point and report fit_viewed through your backend. When the customer starts, create a session for the product and chosen color. Save its ID in that customer\u2019s server-side session and render the returned questions. Do not expose your Metr key to the browser."
+          }
+        ]
+      },
+      {
+        "title": "3. Show the recommendation",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Submit only advertised answers, then show the returned size, explanation and available variants. Treat unknown fit areas as unknown. Offer the size chart and a redo action. Starting over creates a new session rather than rewriting historical answers."
+          }
+        ]
+      },
+      {
+        "title": "4. Record the customer\u2019s choice",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Complete the session as accepted, overridden or declined. Check stock before adding to cart. Store the fit_session_id with the cart/order line so your order backend can report later outcomes. Fit does not process carts, payments or shipping."
+          }
+        ]
+      },
+      {
+        "title": "5. Report outcomes",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Send confirmed purchases and subsequent returns/exchanges/kept signals from trusted backend events. Validate ecommerce-platform webhook signatures in your adapter and reuse stable delivery IDs. Unassisted orders can omit session_id. Do not build attribution from a customer name or an email address."
+          }
+        ]
+      },
+      {
+        "title": "6. Handle outages and retention",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Use timeouts, bounded retries and the merchant\u2019s size chart as fallback. A sizing outage must not block checkout. Agree consent and retention with the merchant. V1 provides an explicit pruning script for body answers and pseudonymous references; backups and exports need the same approved policy."
+          }
+        ]
+      },
+      {
+        "title": "What is not included",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "No Shopify app, JavaScript SDK, merchant dashboard, payment flow or Discover API ships with Fit V1. Juno and future Shopify adapters call the same REST contract from their own backend."
+          }
+        ]
+      }
+    ]
+  }
+]

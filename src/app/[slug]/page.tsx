@@ -23,7 +23,7 @@ export async function generateMetadata({
       about:
         "Metr helps fashion stores offer AI product search and size recommendations using their own catalog and size charts.",
       developers:
-        "Explore planned APIs and components for adding Metr product search and size recommendations to your online store.",
+        "Integrate Metr Fit sizing through its documented REST API, with product-specific questionnaires, recommendations and outcome events.",
       privacy:
         "Information about access requests and data handling on the Metr preview website.",
       terms: "Preview website terms and demonstration limitations.",
@@ -113,49 +113,56 @@ export default async function Page({
     return (
       <>
         <section className="inner-hero wrap">
-          <Label>Developers</Label>
-          <h1>Add Metr search and sizing to your website.</h1>
+          <Label>Metr Fit / Developers</Label>
+          <h1>Size recommendations through one API.</h1>
           <p>
-            Connect your catalog, prices, stock and size charts. Use Metr to
-            show matching products and size recommendations within your
-            existing online store.
+            Send your products, available sizes and approved size charts.
+            Receive a product-specific quiz and an explained size recommendation.
+            Report purchases and returns through the same REST API.
           </p>
-          <CTA />
+          <CTA href="/docs/quickstart">Read the quickstart</CTA>
         </section>
         <section className="developer-grid wrap">
           <div>
-            <h2>
-              Plan your integration.
-            </h2>
+            <h2>Built for your store’s backend.</h2>
             <p>
-              Planned APIs and website components will support product search
-              and size recommendations. During early access, we work with
-              each brand to review its data and agree on the setup.
+              Metr Fit V1 includes store-scoped API keys, catalog and chart APIs,
+              deterministic sizing, customer sessions and outcome events.
+              Use the generated OpenAPI contract to integrate with your existing store.
             </p>
             <div className="surface-list">
-              <span>REST API</span>
-              <span>JavaScript SDK</span>
-              <span>React components</span>
-              <span>Webhooks</span>
+              <span>REST /v1</span>
+              <span>OpenAPI 3.1</span>
+              <span>Store-scoped keys</span>
             </div>
             <p className="notice">
-              Public APIs and SDKs are in development. Shopify and WooCommerce
-              connectors are planned. Request access to discuss your storefront.
+              Keep API keys on your server. A Shopify app and JavaScript SDK
+              are not included in Fit V1. Discover remains a separate planned product.
             </p>
+            <CTA href="/docs/api-reference" secondary>Explore the API</CTA>
           </div>
           <div className="code-panel">
             <div className="demo-top">
-              <span>Integration concept</span>
-              <span>Illustrative, not a live SDK</span>
+              <span>Submit quiz answers</span>
+              <span>From your backend</span>
             </div>
-            <pre>
-              <code>{`// Illustrative setup for your store\nMetr.init({\n  merchantId: "your_brand"\n});\n\n// Open product search\nMetr.openDiscover();\n\n// Product-specific size guidance\n// Built on your approved size charts`}</code>
-            </pre>
+            <pre><code>{`POST /v1/stores/{store_id}/fit-sessions/{session_id}/recommendations
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "answers": {
+    "usual_size": "M",
+    "size_consistency": "consistent",
+    "preferred_fit": "regular",
+    "measurements": { "chest": 98 }
+  }
+}`}</code></pre>
           </div>
         </section>
-        <Closing />
       </>
     );
+
   return (
     <>
       <section className="inner-hero wrap">

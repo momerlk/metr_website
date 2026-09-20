@@ -77,6 +77,7 @@ export function Footer() {
           <Link href="/discover">Discover</Link>
           <Link href="/fit">Fit</Link>
           <Link href="/developers">Developers</Link>
+          <Link href="/docs">API documentation</Link>
           <Link href="/about">About</Link>
           <Link href="/access">Request access</Link>
         </nav>
