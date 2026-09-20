@@ -149,24 +149,6 @@ export function FitLiveDemo() {
         <span>Fit / Sizing</span>
         <span>Live API</span>
       </div>
-      {products && products.length > 1 && (
-        <div className="fit-controls fit-product">
-          <label htmlFor={productId}>
-            Product
-            <select
-              id={productId}
-              value={product}
-              onChange={(event) => setProduct(event.target.value)}
-            >
-              {products.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
       <div className="fit-body">
         <div className="fit-garment">
           <Garment
@@ -184,7 +166,24 @@ export function FitLiveDemo() {
           <span className="reading-label">
             {questionnaire ? `Verified size chart · revision ${questionnaire.chart_revision}` : "Loading"}
           </span>
-          <h3>{selected?.title ?? "Sizing quiz"}</h3>
+          {products && products.length > 1 ? (
+            <label className="fit-product" htmlFor={productId}>
+              <select
+                aria-label="Product"
+                id={productId}
+                value={product}
+                onChange={(event) => setProduct(event.target.value)}
+              >
+                {products.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <h3>{selected?.title ?? "Sizing quiz"}</h3>
+          )}
           <p>
             {questionnaire
               ? `${readable(questionnaire.category)} · sizes in stock: ${questionnaire.available_sizes.join(", ")}`
@@ -208,7 +207,10 @@ export function FitLiveDemo() {
           </form>
         </div>
       </div>
-      <div className="fit-result" aria-live="polite">
+      <div
+        className={recommendation || error ? "fit-result" : "fit-result empty"}
+        aria-live="polite"
+      >
         {error ? (
           <p className="fit-error">{error}</p>
         ) : recommendation ? (
@@ -230,9 +232,7 @@ export function FitLiveDemo() {
               </div>
             </dl>
           </>
-        ) : (
-          <p>Answer the questions to request a recommendation.</p>
-        )}
+        ) : null}
       </div>
       {recommendation && (
         <div className="fit-explanation">
@@ -246,10 +246,9 @@ export function FitLiveDemo() {
         </div>
       )}
       <p className="demo-note">
-        This runs against the Metr Fit API: the questionnaire, available sizes and
-        recommendation come from the store’s verified size chart and live variant
-        stock. The catalog is a fictional sample store. Confidence is an
-        uncalibrated evidence score, not a probability of correct fit.
+        Live Metr Fit API, fictional sample catalog. Questions, sizes in stock
+        and the recommendation come from that store’s verified chart. Confidence
+        is an uncalibrated evidence score, not a probability of correct fit.
       </p>
     </div>
   );

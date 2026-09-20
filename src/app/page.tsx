@@ -6,21 +6,21 @@ export const metadata = { alternates: { canonical: "/" } };
 export default function Home() {
   return (
     <>
-      <section className="hero wrap">
+      <section className="hero wrap" aria-labelledby="hero-title">
         <div className="hero-copy">
           <Label>Metr Fit · Early access</Label>
-          <h1>
-            Size recommendations
+          <h1 id="hero-title">
+            AI sizing for
             <br />
-            for fashion stores.
+            <span>fashion stores.</span>
           </h1>
           <p className="hero-tagline">
             Help customers choose a size before they buy.
           </p>
           <p>
-            Metr connects to your product catalog and approved size charts. On
-            the product page, a customer answers a short quiz and receives a
-            size for that garment, with an explanation of how it should fit.
+            Add a short size quiz to your product pages. Metr uses your approved
+            size charts and customer answers to recommend an available size
+            and explain how it should fit.
           </p>
           <div className="hero-actions">
             <CTA />
@@ -30,6 +30,10 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-demo">
+          <div className="hero-demo-intro">
+            <span>Try the sizing experience</span>
+            <span>From answers to a size <span aria-hidden="true">↘</span></span>
+          </div>
           <Fit />
         </div>
       </section>
