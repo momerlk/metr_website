@@ -1,6 +1,6 @@
 # Metr
 
-Next.js App Router + React + TypeScript. Native CSS, local Satoshi, approved Metr brand assets, and interactive fictional catalog examples.
+Next.js App Router + React + TypeScript. Native CSS, local Satoshi, approved Metr brand assets, and a Metr Fit sizing demo backed by the Fit API. AI product search (Discover) is not part of the current site; `/discover` redirects to `/fit` and the old page lives in git history.
 
 ## Run
 
@@ -18,6 +18,12 @@ Open http://localhost:3000. `npm run build` creates the production build; `npm s
 `POST /api/access` validates submissions and stores them in SQLite at `data/leads.sqlite`. It includes an origin check, body-size limit, honeypot, transactional rate limiting, and explicit error states. Set `LEADS_DB_PATH` to a persistent, private disk location. Do not deploy this storage configuration to an ephemeral/serverless filesystem; use a shared database for that deployment model. Back up the database and restrict filesystem access.
 
 By default requests share a conservative rate limit (5/minute). Set `TRUST_PROXY=true` only when your trusted proxy strips incoming X-Forwarded-For headers and sets its own. Then limits are per hashed client IP. Leads are not emailed or sent to an external service.
+
+## Live Fit demo
+
+The Fit demo on `/` and `/fit` runs against a real Metr Fit deployment when `METR_API_URL`, `METR_STORE_ID` and `METR_API_KEY` are set. The browser only calls `/api/fit`; the key stays on the server. Use a store-scoped key limited to the `catalog` and `fit` scopes, pointed at a sample store, never a live merchant's customer data. The route applies the same origin check, body-size limit and rate limit as access requests, and forwards only the answer fields the questionnaire defines.
+
+Without those variables the page falls back to the illustrative, prewritten demo. Set them before building, since both pages are prerendered.
 
 ## Before public launch
 

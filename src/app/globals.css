@@ -8,7 +8,7 @@ prose, a mono face only where a number or label is a measurement.
 STORY: a fashion brand sees its catalog and its customer read by the same
 instrument, believes the results are grounded, and requests access.
 FIRST VIEWPORT: product category and audience, a clear tagline, a concrete
-explanation, primary CTA; Discover preview at right.
+explanation, primary CTA; live Fit quiz at right.
 FORM: tech-pack / tailor's rule, brief-pinned; no seed rolled.
 */
 @font-face {
@@ -243,8 +243,7 @@ h3 {
   gap: 34px;
   font-size: 15px;
 }
-.navigation > a:not(.nav-cta),
-.product-menu > button {
+.navigation > a:not(.nav-cta){
   color: #cfcec6;
   transition: color 0.2s;
 }
@@ -264,47 +263,6 @@ h3 {
 }
 .nav-cta:hover {
   border-color: var(--brass);
-}
-.product-menu {
-  position: relative;
-}
-.product-menu > button {
-  background: none;
-  border: 0;
-  min-height: 44px;
-  padding: 0;
-}
-.product-menu > button span {
-  margin-left: 6px;
-}
-.product-dropdown {
-  display: none;
-  position: absolute;
-  top: 44px;
-  left: -16px;
-  width: 260px;
-  padding: 6px;
-  background: var(--panel-2);
-  border: 1px solid var(--line-strong);
-  border-radius: 2px;
-}
-.product-menu:hover .product-dropdown,
-.product-menu:focus-within .product-dropdown {
-  display: block;
-}
-.product-dropdown a {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 2px;
-}
-.product-dropdown a:hover {
-  background: var(--panel);
-}
-.product-dropdown a span {
-  display: block;
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 2px;
 }
 .menu-toggle {
   display: none;
@@ -473,12 +431,6 @@ h3 {
   color: var(--text);
   text-align: right;
 }
-.reading-head {
-  justify-content: space-between;
-}
-.reading-head:after {
-  display: none;
-}
 /* Problem / bridge */
 .bridge {
   margin-top: 72px;
@@ -599,116 +551,10 @@ h3 {
   border-radius: 50%;
   background: var(--brass);
 }
-.demo-body {
-  padding: 24px 22px 0;
-}
-.demo-query p {
-  color: var(--text);
-  font-size: 22px;
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  margin: 10px 0 24px;
-  min-height: 4.05em;
-  animation: appear 0.5s var(--ease) both;
-}
-.demo-body .reading {
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--line);
-}
-.demo-body .reading > div:not(.reading-head) {
-  animation: appear 0.5s var(--ease) both;
-}
-.matches-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: 22px 0 14px;
-  font: 12px var(--mono);
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.product-card {
-  min-width: 0;
-  animation: appear 0.5s var(--ease) both;
-}
-.product-image {
-  aspect-ratio: 1 / 1.1;
-  background: var(--product-ground);
-  border: 1px solid var(--line-strong);
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
 .garment {
   width: 88%;
   height: 88%;
   filter: drop-shadow(1px 9px 6px rgba(0, 0, 0, 0.3));
-}
-.product-card h3 {
-  font-size: 15px;
-  font-weight: 500;
-  margin: 12px 0 4px;
-  min-height: 2.5em;
-  overflow-wrap: anywhere;
-  text-wrap: pretty;
-}
-.product-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font: 12px var(--mono);
-  color: var(--muted);
-}
-.product-meta > span:first-child {
-  color: var(--text);
-}
-.product-meta > span:last-child {
-  color: var(--brass);
-}
-.demo-explanation {
-  font-size: 15px;
-  margin: 22px 0 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-  animation: appear 0.5s var(--ease) 0.7s both;
-}
-.prompt-switch {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 24px;
-  border-top: 1px solid var(--line);
-  background: var(--bg);
-}
-.prompt-switch button {
-  background: transparent;
-  border: 0;
-  border-right: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 14px;
-  min-height: 52px;
-  padding: 0 12px;
-  position: relative;
-  transition: color 0.2s, background 0.2s;
-}
-.prompt-switch button:last-child {
-  border-right: 0;
-}
-.prompt-switch button:hover {
-  color: var(--text);
-}
-.prompt-switch button[aria-selected="true"] {
-  color: var(--text);
-  background: var(--brass-tint);
-  box-shadow: inset 0 2px 0 var(--brass);
-}
-.demo-instruction {
-  padding-top: 20px;
-  padding-bottom: 0;
 }
 /* Fit demo */
 .fit-body {
@@ -756,6 +602,7 @@ h3 {
   gap: 6px;
 }
 .fit-controls select,
+.fit-controls input,
 .access-form input,
 .access-form select,
 .access-form textarea {
@@ -771,6 +618,7 @@ h3 {
   transition: border-color 0.2s, background 0.2s;
 }
 .fit-controls select:hover,
+.fit-controls input:hover,
 .access-form input:hover,
 .access-form select:hover,
 .access-form textarea:hover {
@@ -826,6 +674,58 @@ h3 {
   letter-spacing: -0.04em;
   color: var(--brass);
   animation: appear 0.4s var(--ease) both;
+}
+.fit-product {
+  padding: 18px 22px 0;
+}
+.fit-demo .fit-garment {
+  align-self: start;
+  aspect-ratio: 1;
+}
+.fit-optional-group summary {
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px 0;
+}
+.fit-optional-group summary:hover {
+  color: var(--text);
+}
+.fit-optional-group .fit-controls {
+  padding-top: 12px;
+}
+.fit-optional {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.fit-help {
+  font-size: 12px;
+  color: var(--muted);
+}
+.fit-controls .button {
+  justify-content: center;
+  margin-top: 4px;
+}
+.fit-controls .button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.fit-error,
+.fit-warning {
+  color: #f3b5a3;
+  font-size: 14px;
+  margin: 0;
+}
+.fit-explanation {
+  display: grid;
+  gap: 8px;
+  padding: 0 22px 18px;
+  font-size: 14px;
+}
+.fit-explanation .demo-note {
+  padding: 0;
 }
 .demo-note {
   font-size: 13px;
@@ -943,7 +843,7 @@ footer {
   padding-bottom: 32px;
 }
 .footer-rule {
-  height: 28px;
+  height: 40px;
   opacity: 0.6;
 }
 .footer-grid {
@@ -1261,8 +1161,7 @@ footer {
   .fit-section .feature-copy {
     grid-row: 1;
   }
-  .fit-demo,
-  .discovery-demo {
+  .fit-demo{
     max-width: 620px;
     width: 100%;
     justify-self: center;
@@ -1330,23 +1229,6 @@ footer {
     margin: 12px 0 0;
     justify-content: space-between;
   }
-  .product-menu > button {
-    display: none;
-  }
-  .product-dropdown {
-    display: block;
-    position: static;
-    width: 100%;
-    border: 0;
-    background: none;
-    padding: 0;
-  }
-  .product-dropdown a {
-    padding: 12px 8px;
-  }
-  .product-dropdown a span {
-    display: none;
-  }
   h1 {
     font-size: clamp(44px, 13vw, 60px);
   }
@@ -1366,15 +1248,6 @@ footer {
   .demo-top > span:first-child {
     flex-shrink: 0;
   }
-  .demo-body {
-    padding: 18px 14px 0;
-  }
-  .demo-query p {
-    font-size: 19px;
-  }
-  .product-grid {
-    gap: 8px;
-  }
   .hero-actions {
     gap: 10px;
   }
@@ -1383,16 +1256,6 @@ footer {
     justify-content: space-between;
     padding-inline: 16px;
     gap: 8px;
-  }
-  .product-card h3 {
-    font-size: 13px;
-  }
-  .product-meta {
-    font-size: 11px;
-  }
-  .prompt-switch button {
-    font-size: 13px;
-    padding: 0 8px;
   }
   .fit-body {
     grid-template-columns: 1fr;

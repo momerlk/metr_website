@@ -5,7 +5,6 @@ export type Lead = {
   website: string;
   platform: string;
   orders: string;
-  interest: string;
   message: string;
 };
 export function validateLead(input: unknown): Lead {
@@ -28,7 +27,6 @@ export function validateLead(input: unknown): Lead {
     website = text("website", 500),
     platform = text("platform", 30),
     orders = text("orders", 30),
-    interest = text("interest", 30),
     message = text("message", 2000, true);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     throw new Error("Please enter a valid work email.");
@@ -47,12 +45,9 @@ export function validateLead(input: unknown): Lead {
     throw new Error("Please enter a valid public website URL.");
   if (
     !["Shopify", "WooCommerce", "Custom", "Other"].includes(platform) ||
-    !["<100", "100–500", "500–2,000", "2,000+"].includes(orders) ||
-    !["Discover", "Fit", "Both"].includes(interest)
+    !["<100", "100–500", "500–2,000", "2,000+"].includes(orders)
   )
-    throw new Error(
-      "Please select the platform, order range, and product interest.",
-    );
+    throw new Error("Please select the platform and order range.");
   return {
     name,
     email,
@@ -60,7 +55,6 @@ export function validateLead(input: unknown): Lead {
     website: url.href,
     platform,
     orders,
-    interest,
     message,
   };
 }

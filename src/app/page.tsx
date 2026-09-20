@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CTA, Label, Closing } from "@/components/site";
-import { DiscoverDemo, FitDemo } from "@/components/demos";
+import { Fit } from "@/components/fit";
 import { Rule } from "@/components/rule";
 export const metadata = { alternates: { canonical: "/" } };
 export default function Home() {
@@ -8,178 +8,125 @@ export default function Home() {
     <>
       <section className="hero wrap">
         <div className="hero-copy">
-          <Label>Metr · Early access</Label>
+          <Label>Metr Fit · Early access</Label>
           <h1>
-            AI search and sizing
+            Size recommendations
             <br />
             for fashion stores.
           </h1>
           <p className="hero-tagline">
-            Help customers find what to buy and in which size.
+            Help customers choose a size before they buy.
           </p>
           <p>
-            Metr connects to your online store’s product catalog and size charts.
-            It shows customers the clothes they ask for and recommends a size
-            for the item they choose, directly on your website.
+            Metr connects to your product catalog and approved size charts. On
+            the product page, a customer answers a short quiz and receives a
+            size for that garment, with an explanation of how it should fit.
           </p>
           <div className="hero-actions">
             <CTA />
-            <CTA href="#discover" secondary>
-              Try the search demo
+            <CTA href="/docs/quickstart" secondary>
+              Read the quickstart
             </CTA>
           </div>
         </div>
         <div className="hero-demo">
-          <DiscoverDemo />
+          <Fit />
         </div>
       </section>
-      <div className="scale-strip" aria-label="The Metr platform">
+      <div className="scale-strip" aria-label="How Metr Fit works">
         <Rule units={400} height={40} />
         <ol className="wrap">
           <li>
-            <b>Product search</b> Customers describe the clothes they want.
-            Metr shows matching items from your store.
+            <b>Your size charts</b> You supply each garment’s measurements. A
+            recommendation only uses the chart you approved for that product.
           </li>
           <li>
-            <b>Size recommendations</b> Customers enter their usual size and
-            preferred fit. Metr suggests a size for the selected item.
+            <b>A short quiz</b> Customers give their usual size, preferred fit
+            and, if they want, body measurements.
           </li>
           <li>
-            <b>Connected to your store</b> Your catalog and size charts supply
-            the answers. Customers buy through your existing checkout.
+            <b>Connected to your store</b> Only sizes you currently have in
+            stock are recommended. Customers buy through your existing checkout.
           </li>
         </ol>
       </div>
       <section className="section wrap problem" id="platform">
         <div className="section-heading">
           <h2>
-            From “a linen shirt”
+            From “which size
             <br />
-            to a shirt in your store.
+            should I order?” to an answer.
           </h2>
           <p>
-            A customer types “a relaxed linen shirt for summer.” Metr checks
-            your product descriptions, fabrics and stock, then shows shirts
-            that match. Every result links to a product on your website.
+            A customer usually wears M and likes a relaxed fit. Metr compares
+            those answers with the garment’s chest, shoulder and length
+            measurements, then recommends the closest available size and says
+            how it should feel.
           </p>
         </div>
         <div className="bridge">
           <div>
-            <span className="reading-label">Customer request · Example</span>
-            <p className="bridge-quote">
-              “A relaxed linen shirt for summer.”
-            </p>
+            <span className="reading-label">Customer answers · Example</span>
+            <p className="bridge-quote">“I usually wear M, relaxed.”</p>
             <dl className="reading">
               <div>
-                <dt>Fabric</dt>
-                <dd>Linen</dd>
+                <dt>Usual size</dt>
+                <dd>M</dd>
               </div>
               <div>
-                <dt>Fit</dt>
+                <dt>Across brands</dt>
+                <dd>Consistent</dd>
+              </div>
+              <div>
+                <dt>Preferred fit</dt>
                 <dd>Relaxed</dd>
-              </div>
-              <div>
-                <dt>Season</dt>
-                <dd>Summer</dd>
               </div>
             </dl>
           </div>
           <div className="bridge-core">
             <img src="/brand/metr-icon-white.svg" alt="" width="96" height="96" />
-            <span>Metr matches</span>
+            <span>Metr compares</span>
           </div>
           <div>
-            <span className="reading-label">Matching product</span>
+            <span className="reading-label">Your approved chart</span>
             <p className="bridge-quote">Relaxed linen shirt, SKU 2231</p>
             <dl className="reading">
               <div>
-                <dt>Product</dt>
-                <dd>shirt</dd>
+                <dt>chest, size M</dt>
+                <dd>104 cm</dd>
               </div>
               <div>
-                <dt>material</dt>
-                <dd>linen, 100%</dd>
+                <dt>shoulder, size M</dt>
+                <dd>48 cm</dd>
               </div>
               <div>
-                <dt>fit</dt>
-                <dd>relaxed</dd>
+                <dt>length, size M</dt>
+                <dd>70 cm</dd>
               </div>
               <div>
-                <dt>stock</dt>
+                <dt>in stock</dt>
                 <dd>S · M · L</dd>
               </div>
             </dl>
           </div>
         </div>
       </section>
-      <section className="section wrap feature" id="discover">
-        <div className="feature-copy">
-          <Label>Product search · Metr Discover</Label>
-          <h2>Show the clothes your customers ask for.</h2>
-          <p>
-            A customer types “a black shirt for dinner, under Rs 5,000.”
-            Metr searches your catalog for black shirts within that budget
-            and shows the matching products, prices and reasons to choose them.
-          </p>
-          <ul className="feature-list">
-            <li>
-              <b>Everyday language.</b> Customers can describe an occasion, a
-              style or a budget.
-            </li>
-            <li>
-              <b>Your products.</b> Results come from your catalog and use
-              your stock data.
-            </li>
-            <li>
-              <b>Relevant matches.</b> Price, colour and style help determine
-              which products appear.
-            </li>
-          </ul>
-          <Link className="text-link" href="/discover">
-            See how product search works <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-        <DiscoverDemo large />
-      </section>
-      <section className="section wrap feature fit-section" id="fit">
-        <FitDemo />
-        <div className="feature-copy">
-          <Label>Size recommendations · Metr Fit</Label>
-          <h2>
-            Answer “Which size
-            <br />should I order?”
-          </h2>
-          <p>
-            A customer selects their usual size and how they like clothes to
-            fit. Metr compares those answers with the item’s size chart, then
-            recommends a size and explains whether it will feel close,
-            relaxed or roomy.
-          </p>
-          <p className="muted-copy">
-            Each recommendation depends on the product’s measurements. Your
-            brand provides and approves the size charts.
-          </p>
-          <Link className="text-link" href="/fit">
-            See how size recommendations work <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-      </section>
       <section className="section loop">
         <div className="wrap">
           <div className="section-heading">
-            <h2>From your catalog to your checkout.</h2>
+            <h2>From your size charts to your checkout.</h2>
             <p>
-              You provide the product catalog and size charts. Metr uses them
-              to power search and size recommendations on your website.
-              Your store handles the cart, payment and order.
+              You provide the catalog, available variants and approved size
+              charts. Metr returns the quiz and the recommendation. Your store
+              handles the cart, payment and order.
             </p>
           </div>
           <ol className="loop-flow">
             {[
-              ["Connect", "Share your catalog, prices, stock and size charts."],
-              ["Set up", "Add search and size guidance to your website."],
-              ["Search", "Customers describe what they want and see matching items."],
-              ["Choose a size", "Customers get a recommendation for the product."],
+              ["Connect", "Share your products, stock and approved size charts."],
+              ["Set up", "Add the size quiz to your product pages."],
+              ["Ask", "Customers answer a few questions about fit."],
+              ["Recommend", "Metr returns a size, expected fit and explanation."],
               ["Buy", "Customers complete the purchase in your store."],
             ].map(([step, note]) => (
               <li key={step}>
@@ -205,10 +152,10 @@ export default function Home() {
         </div>
         <dl className="integration-list">
           {[
+            ["REST API", "Available"],
             ["Shopify", "Planned"],
             ["WooCommerce", "Planned"],
-            ["Custom storefront", "Early access"],
-            ["APIs and SDKs", "In development"],
+            ["JavaScript SDK", "Not in V1"],
           ].map(([name, status]) => (
             <div key={name}>
               <dt>{name}</dt>

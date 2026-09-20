@@ -20,20 +20,8 @@ export function Navigation() {
         className={open ? "navigation open" : "navigation"}
         aria-label="Main navigation"
       >
-        <div className="product-menu">
-          <button aria-haspopup="true">
-            Product <span aria-hidden="true">⌄</span>
-          </button>
-          <div className="product-dropdown">
-            <Link href="/discover" onClick={() => setOpen(false)}>
-              Discover <span>AI product search</span>
-            </Link>
-            <Link href="/fit" onClick={() => setOpen(false)}>
-              Fit <span>Size recommendations</span>
-            </Link>
-          </div>
-        </div>
         {[
+          ["/fit", "Fit"],
           ["/developers", "Developers"],
           ["/about", "About"],
         ].map(([href, label]) => (

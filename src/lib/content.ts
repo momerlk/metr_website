@@ -1,28 +1,4 @@
 export const productPages = {
-  discover: {
-    label: "Product search · Metr Discover",
-    title: "AI product search for your fashion store.",
-    description:
-      "Customers type requests like ‘a black shirt under Rs 5,000’. Metr searches your product catalog and shows matching clothes, prices and links to buy them on your website.",
-    steps: [
-      [
-        "Describe the need",
-        "The customer types what they want: an occasion, colour, style or budget. They do not need to know your product names.",
-      ],
-      [
-        "Search your catalog",
-        "Metr uses your product descriptions, prices and stock data to find suitable items available in your store.",
-      ],
-      [
-        "Show the matches",
-        "The customer sees products that match their request, along with prices and a short explanation of why each was selected.",
-      ],
-      [
-        "Continue shopping",
-        "The customer opens a product in your store to choose a size and buy through your existing checkout.",
-      ],
-    ],
-  },
   fit: {
     label: "Size recommendations · Metr Fit",
     title: "A size recommendation on your product page.",

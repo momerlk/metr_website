@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { validateLead } from "../src/lib/lead.ts";
-import { demoSize, examples } from "../src/lib/demo.ts";
+import { demoSize } from "../src/lib/demo.ts";
 const lead = {
   name: "Test Merchant",
   email: "TEST@example.com",
@@ -9,7 +9,6 @@ const lead = {
   website: "https://example.com",
   platform: "Shopify",
   orders: "100–500",
-  interest: "Both",
   message: "",
 };
 test("lead validation normalizes valid data and rejects invalid trust-boundary inputs", () => {
@@ -21,16 +20,15 @@ test("lead validation normalizes valid data and rejects invalid trust-boundary i
     { ...lead, website: "javascript:alert(1)" },
     { ...lead, website: "https://user:password@example.com" },
     { ...lead, platform: "Unsupported" },
+    { ...lead, orders: "many" },
     { ...lead, name: " " },
     { ...lead, message: "a".repeat(2001) },
   ])
     assert.throws(() => validateLead(input));
 });
-test("illustrative fit sizes stay in range and discovery examples respect stated budget", () => {
+test("illustrative fit sizes stay in range", () => {
   assert.equal(demoSize("XS", "Close"), "XS");
   assert.equal(demoSize("XL", "Oversized"), "XL");
   assert.equal(demoSize("M", "Relaxed"), "M");
   assert.equal(demoSize("M", "Oversized"), "L");
-  for (const product of examples[0].products)
-    assert.ok(Number(product.price.replace(",", "")) < 5000);
 });

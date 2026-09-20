@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CTA, Label, Closing } from "@/components/site";
-import { DiscoverDemo, FitDemo } from "@/components/demos";
+import { Fit } from "@/components/fit";
 import { productPages } from "@/lib/content";
-const pages = ["discover", "fit", "about", "developers", "privacy", "terms"];
+const pages = ["fit", "about", "developers", "privacy", "terms"];
 export function generateStaticParams() {
   return pages.map((slug) => ({ slug }));
 }
@@ -15,20 +15,20 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = productPages[slug as keyof typeof productPages];
   const title = product
-    ? `Metr ${slug === "fit" ? "Fit — Size Recommendations" : "Discover — AI Product Search"}`
+    ? "Metr Fit — Size Recommendations"
     : `${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
   const description =
     product?.description ||
     {
       about:
-        "Metr helps fashion stores offer AI product search and size recommendations using their own catalog and size charts.",
+        "Metr helps fashion stores recommend a size on the product page using their own catalog and approved size charts.",
       developers:
         "Integrate Metr Fit sizing through its documented REST API, with product-specific questionnaires, recommendations and outcome events.",
       privacy:
         "Information about access requests and data handling on the Metr preview website.",
       terms: "Preview website terms and demonstration limitations.",
     }[slug] ||
-    "Metr product search and size recommendations.";
+    "Metr Fit size recommendations for fashion stores.";
   return {
     title,
     description,
@@ -46,7 +46,7 @@ export default async function Page({
 }) {
   const { slug } = await params;
   if (!pages.includes(slug)) notFound();
-  if (slug === "discover" || slug === "fit") {
+  if (slug === "fit") {
     const content = productPages[slug];
     return (
       <>
@@ -57,7 +57,7 @@ export default async function Page({
           <CTA />
         </section>
         <div className="inner-demo">
-          {slug === "discover" ? <DiscoverDemo large /> : <FitDemo />}
+          <Fit />
         </div>
         <section className="steps wrap">
           {content.steps.map(([title, body], i) => (
@@ -77,32 +77,29 @@ export default async function Page({
       <>
         <section className="inner-hero wrap">
           <Label>About Metr</Label>
-          <h1>Help customers find a product and choose a size.</h1>
-          <p>We’re building AI product search and size recommendations for online fashion stores.</p>
+          <h1>Help customers choose the right size.</h1>
+          <p>We’re building size recommendations for online fashion stores.</p>
         </section>
         <article className="article wrap">
           <p>
-            Metr is a product of Juno Technologies. It brings two tools to a
-            brand’s own website: Discover, for finding products, and Fit,
-            for choosing a size.
+            Metr is a product of Juno Technologies. Metr Fit brings a size
+            recommendation to a brand’s own product pages.
           </p>
           <p>
-            Customers often know the occasion or style they want before they
-            know which product to buy. They may also be unsure which size to
-            choose. Metr uses the brand’s product details and size charts to
-            help answer both questions.
+            Customers who like a product are often unsure which size to
+            choose. Metr uses the brand’s approved size charts, available
+            stock and the customer’s own answers to recommend one.
           </p>
           <h2>Your products. Your website. Your checkout.</h2>
           <p>
-            Discover matches requests in everyday language to products in your
-            catalog. Fit uses the selected garment’s measurements and the
-            customer’s preferences to suggest a size. Customers stay in your
-            store to complete their purchase.
+            Fit uses the selected garment’s measurements and the customer’s
+            preferences to suggest a size, and explains how that size should
+            fit. Customers stay in your store to complete their purchase.
           </p>
           <p>
             Metr is in early access. We review integration requirements with
-            each brand. The interactive examples on this website use fictional
-            products to demonstrate the planned customer experience.
+            each brand. The demo on this website runs against the Metr Fit API
+            using a fictional sample catalog.
           </p>
           <p className="notice">Metr is a product of Juno Technologies.</p>
         </article>
@@ -137,7 +134,7 @@ export default async function Page({
             </div>
             <p className="notice">
               Keep API keys on your server. A Shopify app and JavaScript SDK
-              are not included in Fit V1. Discover remains a separate planned product.
+              are not included in Fit V1.
             </p>
             <CTA href="/docs/api-reference" secondary>Explore the API</CTA>
           </div>
@@ -182,14 +179,14 @@ Content-Type: application/json
             <h2>Information you choose to share</h2>
             <p>
               The access form collects your name, work email, brand, website,
-              platform, order range, product interest, and optional message.
+              platform, order range, and optional message.
               These details are stored to review your early-access request.
             </p>
             <h2>Website demonstrations</h2>
             <p>
-              Discover and Fit use fictional catalog examples. Their controls
-              run in your browser and do not submit your preferences to an AI
-              service.
+              The Fit demo uses a fictional sample catalog. Answers you enter
+              are sent to the Metr Fit API to produce a sample recommendation
+              and are not linked to you.
             </p>
             <h2>Contact and retention</h2>
             <p>

@@ -113,14 +113,6 @@ export function AccessForm() {
         </select>
       </label>
       <label className="full-field">
-        Interested in
-        <select name="interest" defaultValue="Both" required>
-          <option value="Both">Product search and size recommendations</option>
-          <option value="Discover">Discover — Product search</option>
-          <option value="Fit">Fit — Size recommendations</option>
-        </select>
-      </label>
-      <label className="full-field">
         Anything else?{" "}
         <textarea
           name="message"

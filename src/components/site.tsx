@@ -45,14 +45,14 @@ export function Closing() {
       <div className="wrap">
         <Label>Early access for fashion brands</Label>
         <h2>
-          Help customers find
+          Help customers choose
           <br />
-          what to buy and in which size.
+          the right size.
         </h2>
         <p>
-          Request early access to Metr. We’ll review your product catalog,
-          size charts and website to plan how search and size recommendations
-          would work in your store.
+          Request early access to Metr Fit. We’ll review your product catalog,
+          size charts and website to plan how size recommendations would work
+          in your store.
         </p>
         <CTA />
       </div>
@@ -63,7 +63,7 @@ export function Closing() {
 export function Footer() {
   return (
     <footer>
-      <Rule units={300} height={28} className="footer-rule" />
+      <Rule units={300} height={40} className="footer-rule" />
       <div className="wrap footer-grid">
         <Link href="/" className="brand">
           <img
@@ -74,8 +74,7 @@ export function Footer() {
           />
         </Link>
         <nav aria-label="Footer">
-          <Link href="/discover">Discover</Link>
-          <Link href="/fit">Fit</Link>
+          <Link href="/fit">Metr Fit</Link>
           <Link href="/developers">Developers</Link>
           <Link href="/docs">API documentation</Link>
           <Link href="/about">About</Link>
@@ -86,8 +85,8 @@ export function Footer() {
           <Link href="/terms">Terms</Link>
         </nav>
         <span>
-          © {new Date().getFullYear()} Juno Technologies. AI product search
-          and size recommendations for fashion stores.
+          © {new Date().getFullYear()} Juno Technologies. Size
+          recommendations for fashion stores.
         </span>
       </div>
     </footer>

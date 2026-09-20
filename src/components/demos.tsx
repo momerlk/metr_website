@@ -1,12 +1,6 @@
 "use client";
 import { useId, useState } from "react";
-import {
-  examples,
-  demoSize,
-  fitSummary,
-  sizes,
-  sizeChart,
-} from "@/lib/demo";
+import { demoSize, fitSummary, sizes, sizeChart } from "@/lib/demo";
 export function Garment({
   type = "tee",
   color = "#30302b",
@@ -97,75 +91,6 @@ export function Garment({
         </g>
       )}
     </svg>
-  );
-}
-export function DiscoverDemo({ large = false }: { large?: boolean }) {
-  const [selected, setSelected] = useState(0);
-  const item = examples[selected];
-  return (
-    <div className={`demo discovery-demo ${large ? "large-demo" : ""}`}>
-      <div className="demo-top">
-        <span>Discover / Search</span>
-        <span>Interactive example</span>
-      </div>
-      <div className="demo-body" key={selected}>
-        <div className="demo-query">
-          <span className="reading-label">Customer asks</span>
-          <p>“{item.query}”</p>
-        </div>
-        <dl className="reading">
-          <div className="reading-head">
-            <span className="reading-label">Request details</span>
-            <span className="reading-label">Identified</span>
-          </div>
-          {item.intent.map(([k, v], i) => (
-            <div key={k} style={{ animationDelay: `${120 + i * 90}ms` }}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="matches-head">
-          <span className="reading-label">Matches</span>
-          <span>3 sample products</span>
-        </div>
-        <div className="product-grid">
-          {item.products.map((p, i) => (
-            <div
-              className="product-card"
-              key={p.name}
-              style={{ animationDelay: `${420 + i * 110}ms` }}
-            >
-              <div className="product-image">
-                <Garment type={p.type} color={p.color} />
-              </div>
-              <h3>{p.name}</h3>
-              <div className="product-meta">
-                <span>Rs {p.price}</span>
-                <span>{p.matched}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        {large && <p className="demo-explanation">{item.explanation}</p>}
-      </div>
-      <p className="demo-note demo-instruction">
-        Choose an example below. Results are prewritten and use fictional
-        products; this preview does not search a live catalog.
-      </p>
-      <div className="prompt-switch" role="tablist" aria-label="Example requests">
-        {examples.map((example, i) => (
-          <button
-            key={example.short}
-            role="tab"
-            aria-selected={selected === i}
-            onClick={() => setSelected(i)}
-          >
-            {example.short}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 export function FitDemo() {
