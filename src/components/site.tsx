@@ -35,7 +35,6 @@ export function Header() {
         />
       </Link>
       <Navigation />
-      <div className="progress" aria-hidden="true" />
     </header>
   );
 }
@@ -43,7 +42,6 @@ export function Closing() {
   return (
     <section className="closing">
       <div className="wrap">
-        <Label>Early access for fashion brands</Label>
         <h2>
           Help customers choose
           <br />
@@ -56,14 +54,13 @@ export function Closing() {
         </p>
         <CTA />
       </div>
-      <Rule vertical units={60} height={72} className="closing-rule" />
     </section>
   );
 }
 export function Footer() {
   return (
     <footer>
-      <Rule units={300} height={40} className="footer-rule" />
+      <Rule units={300} className="footer-rule" />
       <div className="wrap footer-grid">
         <Link href="/" className="brand">
           <img

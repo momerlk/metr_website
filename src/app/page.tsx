@@ -1,45 +1,78 @@
 import Link from "next/link";
-import { CTA, Label, Closing } from "@/components/site";
+import { CTA, Closing } from "@/components/site";
 import { Fit } from "@/components/fit";
 import { Rule } from "@/components/rule";
 export const metadata = { alternates: { canonical: "/" } };
+/** Line-drawn tech flat: the example shirt from the chart below, with its measured points. */
+function TechFlat() {
+  return (
+    <svg className="tech-flat" viewBox="0 0 250 216" aria-hidden="true">
+      <g className="tech-flat-garment">
+        <path pathLength={1} d="M91 35L62 45 28 99 61 120 76 99 71 207Q125 214 180 207L175 99 191 120 223 99 189 45 159 35Q125 47 91 35Z" />
+        <path pathLength={1} d="M92 35L107 65 124 48 143 65 159 35 140 28 125 43 109 28Z" />
+        <path pathLength={1} d="M125 48V208M143 81H164V103H143ZM74 61L76 99M177 61L175 99M38 95L63 111M187 111L214 95" />
+      </g>
+      <g className="tech-flat-dims">
+        <path d="M76 132H175M76 128V136M175 128V136" />
+        <text x="125.5" y="126" textAnchor="middle">104</text>
+        <path d="M238 35V207M234 35H242M234 207H242" />
+        {/* 70 cm over 172 units: a tick every 5 cm, longer every 10 */}
+        <path
+          className="tech-flat-ticks"
+          d={Array.from({ length: 13 }, (_, i) => {
+            const y = 35 + ((i + 1) * 5 * 172) / 70;
+            return `M${i % 2 ? 234 : 236} ${y.toFixed(1)}H238`;
+          }).join("")}
+        />
+        <text x="246" y="124" textAnchor="middle" transform="rotate(90 246 124)">70</text>
+        <path d="M91 20H159M91 16V24M159 16V24" />
+        <text x="125" y="13" textAnchor="middle">48</text>
+      </g>
+    </svg>
+  );
+}
 export default function Home() {
   return (
     <>
-      <section className="hero wrap" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <Label>Metr Fit · Early access</Label>
-          <h1 id="hero-title">
-            AI sizing for
-            <br />
-            <span>fashion stores.</span>
-          </h1>
-          <p className="hero-tagline">
-            Help customers choose a size before they buy.
-          </p>
-          <p>
-            Add a short size quiz to your product pages. Metr uses your approved
-            size charts and customer answers to recommend an available size
-            and explain how it should fit.
-          </p>
-          <div className="hero-actions">
-            <CTA />
-            <CTA href="/docs/quickstart" secondary>
-              Read the quickstart
-            </CTA>
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="wrap hero-grid">
+          <div>
+            <p className="hero-backers">
+              Backed by{" "}
+              <abbr title="National Incubation Center Lahore">NICL</abbr>
+              <abbr title="LUMS Center for Entrepreneurship">LCE</abbr>
+            </p>
+            <h1 id="hero-title">
+              AI sizing for
+              <br />
+              <span>fashion stores.</span>
+            </h1>
+            <p className="hero-tagline">
+              Help customers choose a size before they buy.
+            </p>
+            <div className="hero-actions">
+              <CTA />
+              <Link href="/docs/quickstart" className="text-link">
+                Read the quickstart <span aria-hidden="true">→</span>
+              </Link>
+            </div>
           </div>
-        </div>
-        <div className="hero-demo">
-          <div className="hero-demo-intro">
-            <span>Try the sizing experience</span>
-            <span>From answers to a size <span aria-hidden="true">↘</span></span>
-          </div>
-          <Fit />
+          <figure className="hero-figure">
+            <TechFlat />
+            <figcaption>
+              <span>Example · Relaxed linen shirt</span>
+              <span className="hero-sizes">
+                Recommended <span aria-hidden="true">S</span>
+                <b>M</b>
+                <span aria-hidden="true">L</span>
+              </span>
+            </figcaption>
+          </figure>
         </div>
       </section>
-      <div className="scale-strip" aria-label="How Metr Fit works">
-        <Rule units={400} height={40} />
-        <ol className="wrap">
+      <Rule units={400} className="hero-rule" />
+      <section className="wrap principles" aria-label="How Metr Fit works">
+        <ol>
           <li>
             <b>Your size charts</b> You supply each garment’s measurements. A
             recommendation only uses the chart you approved for that product.
@@ -53,7 +86,17 @@ export default function Home() {
             stock are recommended. Customers buy through your existing checkout.
           </li>
         </ol>
-      </div>
+      </section>
+      <section className="section wrap demo-section" aria-labelledby="demo-title">
+        <div className="demo-heading">
+          <h2 id="demo-title">Try the sizing experience.</h2>
+          <p>
+            The same quiz a customer answers on a product page, from their
+            answers to a recommended size.
+          </p>
+        </div>
+        <Fit />
+      </section>
       <section className="section wrap problem" id="platform">
         <div className="section-heading">
           <h2>
@@ -143,7 +186,6 @@ export default function Home() {
       </section>
       <section className="section wrap integration">
         <div>
-          <Label>Integration</Label>
           <h2>Connect the store you already run.</h2>
           <p>
             During early access, we review your website, catalog and size charts
