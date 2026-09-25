@@ -531,10 +531,12 @@
             "items": [
               "Usual size and size consistency are required. Apparel also asks preferred_fit (close, regular or loose).",
               "Tops can ask about chest and shoulders; bottoms about waist and hips; one-piece garments combine their relevant areas. Questions only appear for measurements supported by the chart.",
-              "Body profiles are optional narrow/average/broad tie-breakers. They never become invented dimensions.",
+              "Render the optional section field as quiz steps: usual_size, body_profile, height_weight, fit_preference and measurements. Show shoulder and body-profile questions in the main flow, with a skip option; do not hide all of them behind optional measurements.",
+              "Body-area profiles use narrow/average/broad. upper_body_profile compares chest/waist (balanced, fuller_chest, fuller_waist); lower_body_profile compares waist/hips (balanced, fuller_hips, fuller_waist). Paired questions appear only when both chart areas exist. They never become invented dimensions, and measured areas override subjective profiles.",
               "Height is optional only for length-bearing charts. It explains length uncertainty and does not estimate inseam or torso length.",
               "Optional precise body measurements are in centimetres, even if the merchant chart uses inches.",
-              "Weight and customer gender are not requested: this model has no validated use for them. Footwear only asks relevant foot-length information."
+              "weight_kg is optional for adult apparel (30\u2013300 kg). It is stored as context only, not used to rank sizes or increase confidence. Height accepts 120\u2013230 cm on length-bearing charts. Both can be skipped. Footwear does not ask body profiles, height or weight.",
+              "Questionnaire 1.3.0 uses optional silhouette_shoulders, silhouette_waist, silhouette_hips and silhouette_thigh when the chart contains the corresponding area. Each option identifies a fashion_sizing_assets v1 illustration and number, for example female_tops_waist_stomach:3. Let customers choose either illustration set; do not infer anatomy from product gender. Selections are context only. Asset JSON starter factors are unvalidated and are not used for scoring or confidence. Earlier body_type values remain accepted but are no longer asked; their meanings are unchanged. The Metr website displays feet/inches and converts to centimetres at submission; weight stays in kilograms. Existing answer payloads remain valid."
             ]
           }
         ]

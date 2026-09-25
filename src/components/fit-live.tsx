@@ -1,9 +1,17 @@
 "use client";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Garment } from "@/components/demos";
+import { quizSteps, quizAnswerPayload } from "@/lib/fit";
+import { fitAssets } from "@/lib/fit-assets";
 import type { FitProduct, Question, Questionnaire, Recommendation } from "@/lib/fit";
 function readable(value: string) {
   const text = value.replace(/_/g, " ");
+  const labels: Record<string, string> = {
+    balanced: "About the same in both areas", fuller_chest: "Closer around my chest",
+    fuller_waist: "Closer around my waist", fuller_hips: "Closer around my hips",
+    narrow: "Narrower", average: "About average", broad: "Broader",
+  };
+  if (labels[value]) return labels[value];
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 async function callFit(body: Record<string, unknown>) {
@@ -16,6 +24,30 @@ async function callFit(body: Record<string, unknown>) {
   if (!response.ok) throw new Error(payload?.error || "The sizing service is unavailable.");
   return payload;
 }
+function SilhouetteField({ question, value, onChange }: { question: Question; value: string; onChange: (value: string) => void }) {
+  const id = useId();
+  const [track, setTrack] = useState(value.startsWith("male_") ? "male" : "female");
+  const asset = question.options?.find(option => option.startsWith(`${track}_`))?.split(":")[0];
+  if (!asset || !fitAssets[asset]) return null;
+  return <fieldset className="fit-profile" aria-describedby={`${id}-help`}>
+    <legend>{question.label} <span className="fit-optional">Optional</span></legend>
+    <p className="fit-help" id={`${id}-help`}>Choose the illustration closest to your proportions. You can switch sets or skip this question.</p>
+    <div className="fit-illustration-track" aria-label="Illustration set">
+      {["female", "male"].map(option => <button key={option} type="button" aria-pressed={track === option} onClick={() => { if (track !== option) { setTrack(option); onChange(""); } }}>{option === "female" ? "Female illustrations" : "Male illustrations"}</button>)}
+    </div>
+    <div className="fit-asset-sheet" style={{ backgroundImage: `url(/fit/${asset}.png)` }}>
+      {fitAssets[asset].map((description, index) => {
+        const option = `${asset}:${index + 1}`;
+        return <label className="fit-asset-choice" key={option}>
+          <input type="radio" name={id} value={option} checked={value === option} required={question.required}
+            onChange={() => onChange(option)} aria-label={`Option ${index + 1}: ${description}`} />
+          <span className="sr-only">{index + 1}. {description}</span>
+        </label>;
+      })}
+    </div>
+    <button type="button" className="fit-skip-answer" onClick={() => onChange("")}>None feels close / clear answer</button>
+  </fieldset>;
+}
 function Field({
   question,
   value,
@@ -27,9 +59,37 @@ function Field({
 }) {
   const id = useId();
   const help = question.help ? `${id}-help` : undefined;
+  if (question.id.startsWith("silhouette_")) return <SilhouetteField question={question} value={value} onChange={onChange} />;
+  if (question.id === "height_cm") {
+    const [feet = "", inches = ""] = value.split(":");
+    return <fieldset className="fit-profile" aria-describedby={help}>
+      <legend>How tall are you? <span className="fit-optional">Optional</span></legend>
+      <div className="fit-height-inputs">
+        <label htmlFor={`${id}-feet`}>Feet<input id={`${id}-feet`} type="number" inputMode="numeric" min="3" max="7" step="1" placeholder="5" value={feet} required={question.required || inches !== ""} onChange={e => onChange(`${e.target.value}:${inches}`)} /></label>
+        <label htmlFor={`${id}-inches`}>Inches<input id={`${id}-inches`} type="number" inputMode="decimal" min="0" max="11.99" step="any" placeholder="8" value={inches} required={question.required || feet !== ""} onChange={e => onChange(`${feet}:${e.target.value}`)} /></label>
+      </div>
+      {question.help && <span className="fit-help" id={help}>{question.help}</span>}
+    </fieldset>;
+  }
+  const isMeasurement = question.id.startsWith("measurements.");
+  const unit = isMeasurement ? "inches" : question.unit;
+  if (question.id.endsWith("_profile")) return (
+    <fieldset className="fit-profile" aria-describedby={help}>
+      <legend>{question.label} {!question.required && <span className="fit-optional">Optional</span>}</legend>
+      {question.options?.map(option => (
+        <label className="fit-profile-choice" key={option}>
+          <input type="radio" name={id} value={option} checked={value === option}
+            required={question.required} onChange={() => onChange(option)} />
+          <span>{readable(option)}</span>
+        </label>
+      ))}
+      {!question.required && <button type="button" className="fit-skip-answer" onClick={() => onChange("")}>Not sure / clear answer</button>}
+      {question.help && <span className="fit-help" id={help}>{question.help}</span>}
+    </fieldset>
+  );
   return (
     <label htmlFor={id}>
-      {question.label}
+      {question.label}{unit && ` (${unit})`}
       {!question.required && <span className="fit-optional"> Optional</span>}
       {question.type === "number" ? (
         <input
@@ -37,11 +97,12 @@ function Field({
           type="number"
           inputMode="decimal"
           value={value}
-          min={question.min ?? undefined}
-          max={question.max ?? undefined}
-          step="0.5"
+          required={question.required}
+          min={isMeasurement ? 0.4 : question.min ?? undefined}
+          max={isMeasurement ? 118.1 : question.max ?? undefined}
+          step="any"
           aria-describedby={help}
-          placeholder={question.unit ?? ""}
+          placeholder={unit ?? ""}
           onChange={(event) => onChange(event.target.value)}
         />
       ) : (
@@ -78,6 +139,13 @@ export function FitLiveDemo() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const productId = useId();
+  const [stepIndex, setStepIndex] = useState(0);
+  const stepHeading = useRef<HTMLHeadingElement>(null);
+  const steps = quizSteps(questionnaire?.questions ?? []);
+  const step = steps[stepIndex];
+  useEffect(() => {
+    if (questionnaire) stepHeading.current?.focus({ preventScroll: true });
+  }, [stepIndex, questionnaire]);
   useEffect(() => {
     let active = true;
     callFit({ action: "products" })
@@ -100,6 +168,8 @@ export function FitLiveDemo() {
     setRecommendation(null);
     setAnswers({});
     setQuestionnaire(null);
+    setSession("");
+    setStepIndex(0);
     callFit({ action: "start", product_id: product })
       .then((payload) => {
         if (!active) return;
@@ -114,25 +184,36 @@ export function FitLiveDemo() {
   }, [product]);
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    let body: Record<string, unknown>;
+    try { body = quizAnswerPayload(answers); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Check your answers."); return; }
+    setError("");
+    if (stepIndex < steps.length - 1) {
+      setStepIndex(index => index + 1);
+      return;
+    }
     setBusy(true);
     setError("");
-    const measurements: Record<string, string> = {};
-    const body: Record<string, unknown> = { measurements };
-    for (const [id, value] of Object.entries(answers)) {
-      if (!value) continue;
-      if (id.startsWith("measurements.")) measurements[id.slice(13)] = value;
-      else body[id] = value;
-    }
     try {
       setRecommendation(await callFit({ action: "recommend", session_id: session, answers: body }));
-      // A session accepts one recommendation, so start a fresh one for the next answer set.
-      const next = await callFit({ action: "start", product_id: product });
-      setSession(next.session_id);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.");
     } finally {
       setBusy(false);
     }
+  }
+  async function editAnswers() {
+    setBusy(true);
+    setError("");
+    try {
+      const next = await callFit({ action: "start", product_id: product });
+      setSession(next.session_id);
+      setQuestionnaire(next.questionnaire);
+      setRecommendation(null);
+      setStepIndex(0);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not restart the quiz.");
+    } finally { setBusy(false); }
   }
   const field = (question: Question) => (
     <Field
@@ -171,6 +252,7 @@ export function FitLiveDemo() {
               <select
                 aria-label="Product"
                 id={productId}
+                disabled={busy}
                 value={product}
                 onChange={(event) => setProduct(event.target.value)}
               >
@@ -189,22 +271,30 @@ export function FitLiveDemo() {
               ? `${readable(questionnaire.category)} · sizes in stock: ${questionnaire.available_sizes.join(", ")}`
               : "Requesting the questionnaire from the Metr Fit API."}
           </p>
-          <form className="fit-controls" onSubmit={submit}>
-            {questionnaire?.questions.filter((question) => question.required).map(field)}
-            {questionnaire?.questions.some((question) => !question.required) && (
-              <details className="fit-optional-group">
-                <summary>Add optional details for a closer match</summary>
-                <div className="fit-controls">
-                  {questionnaire.questions.filter((question) => !question.required).map(field)}
-                </div>
-              </details>
-            )}
-            {questionnaire && (
-              <button className="button" type="submit" disabled={busy}>
-                {busy ? "Working…" : "Get my size"}
-              </button>
-            )}
-          </form>
+          {!recommendation && step && (
+            <form className="fit-controls fit-quiz" onSubmit={submit}>
+              <div className="fit-quiz-progress">
+                <span aria-live="polite">Step {stepIndex + 1} of {steps.length}</span>
+                <progress value={stepIndex + 1} max={steps.length} aria-label="Quiz progress" />
+              </div>
+              <h4 ref={stepHeading} tabIndex={-1}>{step.title}</h4>
+              {step.id === "measurements" && <p className="fit-help">Optional. Body measurements give the recommendation stronger evidence than your usual size or body shape alone.</p>}
+              <fieldset className="fit-step-fields" disabled={busy}>
+                <legend className="sr-only">{step.title}</legend>
+                {step.questions.map(field)}
+              </fieldset>
+              <div className="fit-quiz-actions">
+                {stepIndex > 0 && <button className="button secondary" type="button" disabled={busy} onClick={() => setStepIndex(index => index - 1)}>Back</button>}
+                <button className="button" type="submit" disabled={busy || !session}>
+                  {busy ? "Working…" : stepIndex === steps.length - 1 ? "Get my size" : "Continue"}
+                </button>
+              </div>
+              {!step.questions.some(question => question.required) && <p className="fit-help">You can leave these answers blank and continue.</p>}
+            </form>
+          )}
+          {recommendation && <button className="button secondary" type="button" disabled={busy} onClick={editAnswers}>{busy ? "Working…" : "Change my answers"}</button>}
+          {products?.length === 0 && <p>No sample products are available yet.</p>}
+
         </div>
       </div>
       <div

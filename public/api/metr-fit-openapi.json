@@ -4,6 +4,18 @@
       "Answers": {
         "additionalProperties": false,
         "properties": {
+          "body_type": {
+            "description": "Optional visual proportions v1: 1 straight, 2 broader upper body, 3 fuller hips, 4 defined waist, 5 fuller middle, 6 fuller balanced proportions. Context only; not scored or converted to measurements.",
+            "enum": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6"
+            ],
+            "type": "string"
+          },
           "chest_profile": {
             "enum": [
               "narrow",
@@ -20,13 +32,24 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Optional height in cm for length-bearing charts. Does not infer body lengths.",
+            "maximum": 230,
+            "minimum": 120
           },
           "hip_profile": {
             "enum": [
               "narrow",
               "average",
               "broad"
+            ],
+            "type": "string"
+          },
+          "lower_body_profile": {
+            "enum": [
+              "balanced",
+              "fuller_hips",
+              "fuller_waist"
             ],
             "type": "string"
           },
@@ -55,11 +78,91 @@
             ],
             "type": "string"
           },
+          "silhouette_hips": {
+            "description": "Fashion sizing assets v1: asset stem and option number. Optional context only; no measurement or confidence derived from starter priors.",
+            "enum": [
+              "female_bottoms_hips_seat:1",
+              "female_bottoms_hips_seat:2",
+              "female_bottoms_hips_seat:3",
+              "female_bottoms_hips_seat:4",
+              "female_bottoms_hips_seat:5",
+              "female_bottoms_hips_seat:6",
+              "male_bottoms_hips_seat:1",
+              "male_bottoms_hips_seat:2",
+              "male_bottoms_hips_seat:3",
+              "male_bottoms_hips_seat:4",
+              "male_bottoms_hips_seat:5",
+              "male_bottoms_hips_seat:6"
+            ],
+            "type": "string"
+          },
+          "silhouette_shoulders": {
+            "description": "Fashion sizing assets v1: asset stem and option number. Optional context only; no measurement or confidence derived from starter priors.",
+            "enum": [
+              "female_tops_shoulders:1",
+              "female_tops_shoulders:2",
+              "female_tops_shoulders:3",
+              "female_tops_shoulders:4",
+              "female_tops_shoulders:5",
+              "female_tops_shoulders:6",
+              "male_tops_shoulders:1",
+              "male_tops_shoulders:2",
+              "male_tops_shoulders:3",
+              "male_tops_shoulders:4",
+              "male_tops_shoulders:5",
+              "male_tops_shoulders:6"
+            ],
+            "type": "string"
+          },
+          "silhouette_thigh": {
+            "description": "Fashion sizing assets v1: asset stem and option number. Optional context only; no measurement or confidence derived from starter priors.",
+            "enum": [
+              "female_bottoms_thigh_legs:1",
+              "female_bottoms_thigh_legs:2",
+              "female_bottoms_thigh_legs:3",
+              "female_bottoms_thigh_legs:4",
+              "female_bottoms_thigh_legs:5",
+              "female_bottoms_thigh_legs:6",
+              "male_bottoms_thigh_legs:1",
+              "male_bottoms_thigh_legs:2",
+              "male_bottoms_thigh_legs:3",
+              "male_bottoms_thigh_legs:4",
+              "male_bottoms_thigh_legs:5",
+              "male_bottoms_thigh_legs:6"
+            ],
+            "type": "string"
+          },
+          "silhouette_waist": {
+            "description": "Fashion sizing assets v1: asset stem and option number. Optional context only; no measurement or confidence derived from starter priors.",
+            "enum": [
+              "female_tops_waist_stomach:1",
+              "female_tops_waist_stomach:2",
+              "female_tops_waist_stomach:3",
+              "female_tops_waist_stomach:4",
+              "female_tops_waist_stomach:5",
+              "female_tops_waist_stomach:6",
+              "male_tops_waist_stomach:1",
+              "male_tops_waist_stomach:2",
+              "male_tops_waist_stomach:3",
+              "male_tops_waist_stomach:4",
+              "male_tops_waist_stomach:5",
+              "male_tops_waist_stomach:6"
+            ],
+            "type": "string"
+          },
           "size_consistency": {
             "enum": [
               "sometimes_smaller",
               "consistent",
               "sometimes_larger"
+            ],
+            "type": "string"
+          },
+          "upper_body_profile": {
+            "enum": [
+              "balanced",
+              "fuller_chest",
+              "fuller_waist"
             ],
             "type": "string"
           },
@@ -73,6 +176,19 @@
               "broad"
             ],
             "type": "string"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional adult weight in kg for apparel. Context only: not used in size scoring or confidence.",
+            "maximum": 300,
+            "minimum": 30
           }
         },
         "required": [
@@ -1057,13 +1173,24 @@
           "required": {
             "type": "boolean"
           },
+          "section": {
+            "enum": [
+              "usual_size",
+              "body_profile",
+              "height_weight",
+              "fit_preference",
+              "measurements"
+            ],
+            "type": "string"
+          },
           "type": {
             "type": "string"
           },
           "unit": {
             "enum": [
               "cm",
-              "in"
+              "in",
+              "kg"
             ],
             "type": "string"
           }
@@ -1550,7 +1677,7 @@
   "info": {
     "description": "Standalone multi-tenant sizing API. Server-to-server Bearer keys only: never embed secret keys in browser or Shopify theme code. All measurements submitted by customers are body measurements in cm. Confidence is an uncalibrated evidence score, not a fit probability. Requests are limited to 256 KiB. Merchant/store-scoped resource IDs are opaque.",
     "title": "Metr Fit API",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "openapi": "3.1.0",
   "paths": {

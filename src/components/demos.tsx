@@ -82,11 +82,11 @@ export function Garment({
         <g className="garment-dims" aria-hidden="true">
           <path d="M74 118H175M74 112V124M175 112V124" />
           <text x="124" y="110" textAnchor="middle">
-            {dims.chest} cm
+            {(dims.chest / 2.54).toFixed(1)} in
           </text>
           <path d="M234 35V207M228 35H240M228 207H240" />
           <text x="230" y="124" textAnchor="middle" transform="rotate(-90 230 124)">
-            {dims.length} cm
+            {(dims.length / 2.54).toFixed(1)} in
           </text>
         </g>
       )}
@@ -140,7 +140,7 @@ export function FitDemo() {
         </div>
       </div>
       <table className="pom">
-        <caption className="reading-label">Garment measurements, cm</caption>
+        <caption className="reading-label">Garment measurements, inches</caption>
         <thead>
           <tr>
             <th scope="col">Size</th>
@@ -157,7 +157,7 @@ export function FitDemo() {
               <th scope="row">{row}</th>
               {sizeChart[row].map((v, i) => (
                 <td key={i} aria-current={i === col ? "true" : undefined}>
-                  {v}
+                  {(v / 2.54).toFixed(1)}
                 </td>
               ))}
             </tr>
