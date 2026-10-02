@@ -7,3 +7,4 @@ data/
 public/fonts/
 metr_assets/satoshi_font/
 test-results/
+.deploy/

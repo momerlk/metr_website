@@ -62,3 +62,30 @@ verification are complete. Production uses Secure HttpOnly SameSite=Lax host-onl
 cookies; state-changing requests require an exact same-origin header and a custom
 request header. No integration API key or operator bootstrap key authenticates the
 seller console.
+
+## Production environment on Netlify
+
+Set these through Netlify's environment-variable settings for the production
+context. Values in `.env.local` are private local configuration and are not pushed.
+Variables in `netlify.toml` are not available to serverless functions.
+
+| Variable | Value | Scope |
+| --- | --- | --- |
+| `SITE_URL` | `https://metr.so` | Builds and Functions |
+| `METR_API_URL` | `https://metr-fit-yjc3zwhbia-ue.a.run.app` | Builds and Functions |
+| `METR_STORE_ID` | Sample-store ID from the private credential file | Builds and Functions |
+| `METR_API_KEY` | Sample-store key from the private credential file | Builds and Functions |
+| `CONSOLE_PROXY_KEY` | Matching proxy key from the private credential file | Functions |
+| `AWS_LAMBDA_JS_RUNTIME` | `nodejs22.x` | Builds |
+| `TRUST_PROXY` | `false` | Functions |
+
+The credential source is `../metr_api/.deploy/website-credentials.env`. Import its
+values securely; never copy credentials into tracked files or browser variables.
+Rebuild after configuring the environment, since the Fit demo is prerendered.
+See [Netlify's environment-variable documentation](https://docs.netlify.com/build/functions/environment-variables/).
+
+Netlify's ephemeral functions cannot safely persist the current SQLite access
+requests. A shared database implementation or a persistent Node host is required
+before enabling production access requests; setting `LEADS_DB_PATH` to `/tmp` does
+not solve persistence. Shopify is unavailable until the backend operator configures
+the app credentials, encryption key and `https://metr.so/api/console/shopify/callback`.
