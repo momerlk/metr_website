@@ -15,7 +15,7 @@
             "type": "list",
             "items": [
               "One merchant can own multiple stores. Every resource is isolated by merchant and store.",
-              "The V1 engine uses deterministic rules. It never asks an LLM to invent sizes or body measurements.",
+              "Sizing runs in three modules: every chart is normalized to body centimetres, explicit answers (height, weight, tape measurements) become body estimates with stated uncertainty, and implicit answers (usual size, a size worn at another brand, body-shape illustrations) refine them. When the operator configures it, TypeSafe's Jev model then chooses among the plausible, in-stock chart sizes. Nothing can invent a size or a body measurement.",
               "Adult tops, bottoms, dresses/one-piece garments and supported shoe charts are covered. Unsupported products return an explicit error.",
               "Confidence is an uncalibrated evidence score, not a probability of fit or a measured accuracy claim."
             ]
@@ -151,7 +151,21 @@
         ]
       },
       {
-        "title": "6. Submit answers",
+        "title": "6. Run the adaptive quiz",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions/$SESSION_ID/next-question\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"answers\": {\n    \"usual_size\": \"M\"\n  },\n  \"skipped\": [\n    \"height_cm\"\n  ]\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "Send the answers so far and any skipped question IDs. The response is either the next question to show or done=true, with the current estimate. Repeat until done; the quiz asks the question that most reduces uncertainty about the size and stops once one size is clearly most likely."
+          }
+        ]
+      },
+      {
+        "title": "7. Submit answers",
         "blocks": [
           {
             "type": "code",
@@ -160,12 +174,12 @@
           },
           {
             "type": "paragraph",
-            "text": "The response includes recommended_size, eligible variant_ids, confidence, per-area fit and explanation. Render the result and let the customer choose."
+            "text": "The response includes recommended_size, per-size probabilities, eligible variant_ids, confidence, per-area fit, method and explanation. Render the result and let the customer choose."
           }
         ]
       },
       {
-        "title": "7. Record the choice and outcome",
+        "title": "8. Record the choice and outcome",
         "blocks": [
           {
             "type": "code",
@@ -287,7 +301,7 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Do not put secret keys in themes, browser JavaScript, mobile apps, URLs or analytics. Your backend must authorize the customer\u2019s session before forwarding answers. Validate webhook signatures in your integration before forwarding purchase/return events. A future Shopify adapter will implement that platform-specific layer; it is not part of V1."
+            "text": "Do not put secret keys in themes, browser JavaScript, mobile apps, URLs or analytics. Your backend must authorize the customer\u2019s session before forwarding answers. Validate webhook signatures in your integration before forwarding purchase/return events. The optional seller console supports accounts, store-scoped keys and Shopify OAuth authorization. Shopify catalog sync, storefront proxy and outcome webhooks are not implemented yet."
           }
         ]
       }
@@ -461,6 +475,10 @@
               [
                 "verified",
                 "Set true only after the merchant checks the chart. Draft charts cannot generate recommendations."
+              ],
+              [
+                "brand, share_as_reference",
+                "Optional. A verified chart with share_as_reference=true and a brand name is offered to every store's customers as \u201cwhich size fits you at <brand>?\u201d. Only the brand, sizes and measurements are shared."
               ]
             ]
           },
@@ -492,11 +510,11 @@
   },
   {
     "slug": "questionnaires",
-    "title": "Product-specific questionnaires",
-    "description": "Render the questions returned by the API instead of hardcoding one quiz for every garment.",
+    "title": "Adaptive questionnaires",
+    "description": "Ask each customer only the questions that help for this product.",
     "sections": [
       {
-        "title": "Get the questions",
+        "title": "The question bank",
         "blocks": [
           {
             "type": "code",
@@ -505,7 +523,7 @@
           },
           {
             "type": "paragraph",
-            "text": "Optional ?color=black restricts available_sizes to that exact variant color. This endpoint previews the current chart. Session creation returns the frozen questionnaire to use for actual answers."
+            "text": "Optional ?color=black restricts available_sizes to that exact variant color. Session creation returns the frozen questionnaire (version fit-quiz-2.0.0) to use for actual answers. Every question is optional."
           }
         ]
       },
@@ -514,29 +532,41 @@
         "blocks": [
           {
             "type": "code",
-            "text": "{\n  \"id\": \"usual_size\",\n  \"label\": \"What size do you usually wear for this product type?\",\n  \"type\": \"single_select\",\n  \"required\": true,\n  \"options\": [\n    \"S\",\n    \"M\",\n    \"L\",\n    \"unknown\"\n  ]\n}",
+            "text": "{\n  \"id\": \"reference_size\",\n  \"section\": \"sizes\",\n  \"label\": \"Which size fits you well at another brand?\",\n  \"type\": \"single_select\",\n  \"options\": [\n    \"cht_alpha:M\"\n  ],\n  \"option_labels\": {\n    \"cht_alpha:M\": \"Alpha M\"\n  }\n}",
             "language": "json"
           },
           {
             "type": "paragraph",
-            "text": "Use id as the answer key, label as the visible question, options for choice inputs, and min/max/unit for numbers. Question IDs beginning measurements. map into the answers.measurements object. Send usual_size=unknown when the customer cannot provide it, then require at least one primary body measurement."
+            "text": "Use id as the answer key, label as the visible question, option_labels (when present) as display text for options, and min/max/unit for numbers. Question IDs beginning measurements. map into the answers.measurements object."
           }
         ]
       },
       {
-        "title": "What gets asked",
+        "title": "Adaptive flow",
+        "blocks": [
+          {
+            "type": "code",
+            "text": "curl --fail-with-body -X POST \"$METR_API_URL/v1/stores/$STORE_ID/fit-sessions/$SESSION_ID/next-question\" \\\n  -H \"Authorization: Bearer $METR_API_KEY\" \\\n  -H 'Content-Type: application/json' \\\n  --data '{\n  \"answers\": {\n    \"height_cm\": 176,\n    \"weight_kg\": 75\n  },\n  \"skipped\": []\n}'",
+            "language": "bash"
+          },
+          {
+            "type": "paragraph",
+            "text": "The response is {done, question, asked, estimate}. Show question, add the answer (or its ID to skipped) and call again. The quiz asks explicit inputs first when something uses them, then the question with the largest expected reduction in size uncertainty. A tape measurement must be worth twice a click. It stops when one size has at least 0.8 of the probability, nothing useful remains, or ten questions were asked. Then submit the answers for a recommendation."
+          }
+        ]
+      },
+      {
+        "title": "What can be asked",
         "blocks": [
           {
             "type": "list",
             "items": [
-              "Usual size and size consistency are required. Apparel also asks preferred_fit (close, regular or loose).",
-              "Tops can ask about chest and shoulders; bottoms about waist and hips; one-piece garments combine their relevant areas. Questions only appear for measurements supported by the chart.",
-              "Render the optional section field as quiz steps: usual_size, body_profile, height_weight, fit_preference and measurements. Show shoulder and body-profile questions in the main flow, with a skip option; do not hide all of them behind optional measurements.",
-              "Body-area profiles use narrow/average/broad. upper_body_profile compares chest/waist (balanced, fuller_chest, fuller_waist); lower_body_profile compares waist/hips (balanced, fuller_hips, fuller_waist). Paired questions appear only when both chart areas exist. They never become invented dimensions, and measured areas override subjective profiles.",
-              "Height is optional only for length-bearing charts. It explains length uncertainty and does not estimate inseam or torso length.",
-              "Optional precise body measurements are in centimetres, even if the merchant chart uses inches.",
-              "weight_kg is optional for adult apparel (30\u2013300 kg). It is stored as context only, not used to rank sizes or increase confidence. Height accepts 120\u2013230 cm on length-bearing charts. Both can be skipped. Footwear does not ask body profiles, height or weight.",
-              "Questionnaire 1.3.0 uses optional silhouette_shoulders, silhouette_waist, silhouette_hips and silhouette_thigh when the chart contains the corresponding area. Each option identifies a fashion_sizing_assets v1 illustration and number, for example female_tops_waist_stomach:3. Let customers choose either illustration set; do not infer anatomy from product gender. Selections are context only. Asset JSON starter factors are unvalidated and are not used for scoring or confidence. Earlier body_type values remain accepted but are no longer asked; their meanings are unchanged. The Metr website displays feet/inches and converts to centimetres at submission; weight stays in kilograms. Existing answer payloads remain valid."
+              "explicit: body_track (only for unisex apparel; picks the illustration set), height_cm, weight_kg and age. Product type and gender come from the product.",
+              "sizes: usual_size at this brand, reference_size at another brand that shares its chart, and size_consistency.",
+              "fit: preferred_fit (close, regular or loose) for apparel.",
+              "body_shape: silhouette_shoulders, silhouette_waist, silhouette_hips and silhouette_thigh, answered with a fashion_sizing_assets illustration such as female_tops_waist_stomach:3. They describe shape for Jev and never become centimetres. They are asked only when Jev is enabled.",
+              "measurements: optional body tape measurements in centimetres for chart areas. Garment-only lengths are not asked.",
+              "Footwear asks only usual size, reference size, consistency and foot length."
             ]
           }
         ]
@@ -572,7 +602,7 @@
         "blocks": [
           {
             "type": "code",
-            "text": "{\n  \"id\": \"rec_example\",\n  \"session_id\": \"fit_example\",\n  \"recommended_size\": \"M\",\n  \"variant_ids\": [\n    \"var_medium\"\n  ],\n  \"confidence\": 0.86,\n  \"confidence_meaning\": \"uncalibrated_evidence_score\",\n  \"fit\": {\n    \"chest\": \"comfortable\",\n    \"length\": \"unknown\",\n    \"shoulders\": \"close\"\n  },\n  \"evidence\": {\n    \"chest\": {\n      \"source\": \"measurement\",\n      \"body_cm\": 98,\n      \"chart_min_cm\": 104,\n      \"chart_max_cm\": 104\n    },\n    \"length\": {\n      \"source\": \"not_provided\",\n      \"chart_min_cm\": 70,\n      \"chart_max_cm\": 70\n    },\n    \"shoulders\": {\n      \"source\": \"measurement\",\n      \"body_cm\": 45,\n      \"chart_min_cm\": 46,\n      \"chart_max_cm\": 46\n    }\n  },\n  \"explanation\": \"M is the closest available match to your supplied measurements and preferred fit. Check the garment measurements before buying.\",\n  \"warnings\": [\n    \"Confidence is an uncalibrated evidence score, not a probability of fit.\"\n  ],\n  \"algorithm_version\": \"fit-rules-1.0.0\",\n  \"chart_id\": \"cht_example\",\n  \"chart_revision\": 1,\n  \"created_at\": \"2026-09-20T12:00:00Z\"\n}",
+            "text": "{\n  \"id\": \"rec_example\",\n  \"session_id\": \"fit_example\",\n  \"recommended_size\": \"M\",\n  \"probabilities\": {\n    \"S\": 0.048,\n    \"M\": 0.904,\n    \"L\": 0.048\n  },\n  \"variant_ids\": [\n    \"var_medium\"\n  ],\n  \"confidence\": 0.9,\n  \"confidence_meaning\": \"uncalibrated_evidence_score\",\n  \"fit\": {\n    \"chest\": \"within_range\",\n    \"shoulders\": \"within_range\"\n  },\n  \"evidence\": {\n    \"chest\": {\n      \"source\": \"measurement\",\n      \"chart_min_cm\": 98,\n      \"chart_max_cm\": 98,\n      \"body_cm\": 98.0\n    },\n    \"shoulders\": {\n      \"source\": \"measurement\",\n      \"chart_min_cm\": 45,\n      \"chart_max_cm\": 45,\n      \"body_cm\": 45.0\n    }\n  },\n  \"explanation\": \"M best matches measurement, usual size against this chart.\",\n  \"warnings\": [\n    \"Confidence is an uncalibrated evidence score, not a probability of fit.\"\n  ],\n  \"algorithm_version\": \"metr-fit-2.0.0\",\n  \"method\": \"rules\",\n  \"chart_id\": \"cht_example\",\n  \"chart_revision\": 1,\n  \"created_at\": \"2026-10-01T12:00:00Z\"\n}",
             "language": "json"
           },
           {
@@ -586,7 +616,7 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "confidence is an uncalibrated evidence score between 0 and 1, not the probability a size will fit. Missing primary measurements, inconsistent usual sizing, weak separation between candidates and stretch uncertainty reduce the evidence. Usual-size-only suggestions are capped at 0.55. Do not turn this number into a \u201891% accurate\u2019 claim."
+            "text": "probabilities spreads belief over the available sizes. confidence is the chosen size's probability, clamped to 0.15\u20130.90 (0.60 without a tape measurement or reference brand). It is an uncalibrated evidence score, not the probability a size will fit. method is rules, or rules+jev when Jev chose among the plausible sizes. If Jev is unavailable the rules estimate is returned with a warning. Do not turn confidence into a \u201891% accurate\u2019 claim."
           }
         ]
       },
@@ -829,7 +859,7 @@
               "unsupported_product: this category is not supported.",
               "unverified_chart: attach and approve a chart first.",
               "no_available_sizes: no current variants match chart rows and chosen color.",
-              "insufficient_evidence: provide a usual size or primary body measurement.",
+              "insufficient_evidence: provide a usual size, a size worn at another brand or a body measurement.",
               "invalid_answers: an answer is invalid or irrelevant for this product.",
               "no_suitable_size: the available sizes are too poor a match; do not force a size."
             ]
@@ -943,7 +973,7 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "No Shopify app, JavaScript SDK, merchant dashboard, payment flow or Discover API ships with Fit V1. Juno and future Shopify adapters call the same REST contract from their own backend."
+            "text": "The optional seller console supports account signup/login, store creation, scoped keys and Shopify OAuth authorization. It is not a complete Shopify app: automatic catalog sync, the storefront widget, token refresh and outcome webhooks remain pending. No JavaScript SDK, payment flow or Discover API ships with Fit V1."
           }
         ]
       }

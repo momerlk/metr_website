@@ -4,7 +4,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/privacy", "/terms"],
+      disallow: ["/console", "/api/", "/privacy", "/terms"],
     },
     ...(process.env.SITE_URL
       ? { sitemap: `${process.env.SITE_URL}/sitemap.xml` }

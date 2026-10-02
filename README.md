@@ -38,3 +38,27 @@ Without those variables the page falls back to the illustrative, prewritten demo
 Brand originals live in `metr_assets`. Public logo copies are in `public/brand`. The supplied font is self-hosted for this website at `public/fonts/Satoshi-Variable.woff2`; font binaries are ignored by Git under the supplied license. On a fresh checkout, obtain Satoshi from Fontshare under its license and put the unchanged WOFF2 at that path. The site falls back to Helvetica if it is absent. Product drawings are original SVG garment illustrations, not merchant inventory.
 
 Next.js setup follows the [official installation documentation](https://nextjs.org/docs/app/getting-started/installation).
+
+## Seller console
+
+`/console` provides account registration, login/logout, store setup and store-scoped
+API key management. Set `METR_API_URL`, canonical HTTPS `SITE_URL` and a separate
+random `CONSOLE_PROXY_KEY` (at least 32 characters), matching the API server.
+The configured API base URL is `https://metr-fit-yjc3zwhbia-ue.a.run.app`.
+Set it in the website server's runtime environment; `.env.example` documents the
+value and does not configure a deployed server.
+The website does not store accounts or passwords; these live in the API's Metr
+Atlas database. Server credentials and session tokens never enter browser JSON.
+New integration API-key secrets are deliberately shown once to save on a backend.
+
+Shopify authorization additionally requires the API's Shopify app configuration.
+Register `https://metr.so/api/console/shopify/callback` as the app redirect URL.
+Authorization does not import products or install a sizing widget. Expired access
+tokens require reconnection until automatic token refresh is implemented.
+See `../metr_api/docs/console.md` for setup, implemented boundaries and release gates.
+Email verification and password recovery are not implemented in this first version.
+Do not open public onboarding until those paths and dedicated Atlas/live Shopify
+verification are complete. Production uses Secure HttpOnly SameSite=Lax host-only
+cookies; state-changing requests require an exact same-origin header and a custom
+request header. No integration API key or operator bootstrap key authenticates the
+seller console.
