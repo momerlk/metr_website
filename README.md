@@ -62,7 +62,13 @@ Callback failures preserve only fixed error categories and validated request IDs
 `node scripts/verify-shopify-proxy.mjs` to check the real gateway and cookies
 with a local fixture API; this does not test Atlas or live Shopify. Launches alone never save
 a connection; OAuth still requires HMAC and exact session/state/shop checks.
-Authorization does not import products or install a sizing widget. Expired access
+Authorization does not import products or install a sizing widget. Sellers must
+select **Sync catalog** after connecting. Resync preserves product type, gender,
+fit, stretch and chart links; missing Shopify items become unavailable. Sync imports
+no size charts: add and verify charts before enabling recommendations. A previous
+sync does not guarantee current stock. Sync proxy requests allow 35 seconds (within
+Netlify’s 60-second synchronous function limit); uncertain outcomes refresh
+connection status and require a manual retry. Expired access
 tokens require reconnection until automatic token refresh is implemented.
 See `../metr_api/docs/console.md` for setup, implemented boundaries and release gates.
 Email verification and password recovery are not implemented in this first version.

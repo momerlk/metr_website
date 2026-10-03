@@ -10,7 +10,7 @@ const gateway = randomBytes(32).toString("hex");
 const session = `console_${randomBytes(16).toString("hex")}_${randomBytes(16).toString("hex")}`;
 const launchQuery = "shop=canonical.myshopify.com&timestamp=123&hmac=fixture-signature";
 const requestID = "req_" + "f".repeat(32);
-let starts = 0, launches = 0, expired = false;
+let starts = 0, launches = 0, expired = false, syncFails = false;
 const fixture = createServer(async (request, response) => {
   let raw = "";
   for await (const chunk of request) raw += chunk;
@@ -31,6 +31,10 @@ const fixture = createServer(async (request, response) => {
     assert.equal(input.launch_query, launchQuery);
     if (expired) return send(400, { error: { code: "invalid_launch", request_id: requestID } });
     return send(200, { authorization_url: "https://canonical.myshopify.com/admin/oauth/authorize?state=fixture-state" });
+  }
+  if (url.pathname === "/v1/console/stores/sto_fixture/shopify/sync") {
+    assert.equal(request.method, "POST");
+    return syncFails ? send(502, { error: { code: "sync_failed", message: "Failed to sync Shopify catalog. Check the connection and retry.", request_id: requestID } }) : send(200, { shop: "canonical.myshopify.com", products_imported: 0, products_updated: 0, variants_imported: 0, variants_updated: 0, total_products: 0, total_variants: 0 });
   }
   if (url.pathname === "/v1/console/shopify/callback") {
     if (!url.searchParams.get("code") || !url.searchParams.get("state")) return send(400, { error: { code: "invalid_callback", request_id: requestID } });
@@ -80,6 +84,13 @@ try {
   assert.ok(!cookieValue(response, "__Host-metr_shopify_launch"), "Sign-in must preserve the launch cookie");
   const sessionCookie = cookieValue(response, "__Host-metr_console");
   assert.ok(sessionCookie); assert.ok(!(await response.text()).includes(session));
+  response = await request("stores/sto_fixture/shopify/sync", "POST", {}, sessionCookie);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { shop: "canonical.myshopify.com", products_imported: 0, products_updated: 0, variants_imported: 0, variants_updated: 0, total_products: 0, total_variants: 0 });
+  syncFails = true;
+  response = await request("stores/sto_fixture/shopify/sync", "POST", {}, sessionCookie);
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: "Failed to sync Shopify catalog. Check the connection and retry.", code: "sync_failed", request_id: requestID });
   const both = `${launchCookie}; ${sessionCookie}`;
   response = await request("stores/sto_fixture/shopify/start", "POST", { launch_query: "browser-override" }, both);
   assert.equal(response.status, 400); assert.equal(starts, 0);

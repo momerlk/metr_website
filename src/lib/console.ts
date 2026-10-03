@@ -60,3 +60,35 @@ export function shopifyLaunchQuery(raw: unknown): string {
 export function shopifyRequestID(value: unknown): string | undefined {
   return typeof value === "string" && /^req_[a-f0-9]{32}$/.test(value) ? value : undefined;
 }
+
+export type ShopifySyncResult = {
+  shop: string;
+  products_imported: number;
+  products_updated: number;
+  variants_imported: number;
+  variants_updated: number;
+  total_products: number;
+  total_variants: number;
+};
+export function shopifySyncMessage(value: unknown): string {
+  const result = value as ShopifySyncResult | null;
+  const counts = ["products_imported", "products_updated", "variants_imported", "variants_updated", "total_products", "total_variants"] as const;
+  if (!result || typeof result.shop !== "string" || !counts.every(key => Number.isSafeInteger(result[key]) && result[key] >= 0)) throw new Error("Could not confirm sync completion.");
+  return `Catalog synced: ${result.total_products} products and ${result.total_variants} variants.`;
+}
+export function consoleErrorCode(code: unknown): string {
+  const allowed = [...Object.keys(shopifyCallbackErrors), "sync_failed", "reauthorization_required", "sync_unconfirmed"];
+  return typeof code === "string" && allowed.includes(code) ? code : "failed";
+}
+export function preserveShopifySync(previous: ShopifyConnection | undefined, current: ShopifyConnection): ShopifyConnection {
+  return { ...current, last_sync_at: current.last_sync_at || previous?.last_sync_at };
+}
+export function shopifySyncFailure(error: unknown): string {
+  const failure = error as { code?: string; status?: number } | null;
+  return failure?.code === "sync_failed" ? "Failed to sync Shopify catalog. Check the connection and retry." :
+    !failure?.status || failure.code === "sync_unconfirmed" || failure.status >= 500 ? "Could not confirm sync completion." : "Could not sync Shopify catalog. Check the connection and retry.";
+}
+
+export function shopifySyncAction(status: ShopifyConnection["status"] | undefined): "reconnect" | "retry" {
+  return status === "reauthorization_required" ? "reconnect" : "retry";
+}

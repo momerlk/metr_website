@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
-import { shopifyCallbackErrors, shopifyAppLaunch, shopifyRequestID, type Seller, type Store, type APIKey, type ShopifyConnection } from "@/lib/console";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { shopifySyncAction, shopifySyncMessage, shopifySyncFailure, preserveShopifySync, shopifyCallbackErrors, shopifyAppLaunch, shopifyRequestID, type Seller, type Store, type APIKey, type ShopifyConnection, type ShopifySyncResult } from "@/lib/console";
 
 async function call<T>(path: string, method = "GET", data?: unknown): Promise<T> {
   const response = await fetch(`/api/console/${path}`, { method, headers: { "Content-Type": "application/json", "X-Metr-Console": "1" }, ...(data !== undefined ? { body: JSON.stringify(data) } : {}), cache: "no-store" });
@@ -17,6 +17,8 @@ export default function SellerConsole() {
   const [launchShop, setLaunchShop] = useState<string | null>(null);
   const [selectedStoreID, setSelectedStoreID] = useState("");
   const [requestID, setRequestID] = useState<string | undefined>();
+  const syncLock = useRef(false);
+  const [syncingStore, setSyncingStore] = useState<string | null>(null), [retryStore, setRetryStore] = useState<string | null>(null);
   const [kind, setKind] = useState("custom");
   async function refresh() {
     const account = await call<Seller>("me"); setSeller(account);
@@ -25,9 +27,9 @@ export default function SellerConsole() {
     if (storeList.next_cursor || keyList.next_cursor) setNotice("Showing the first 100 stores and keys. Additional records remain accessible through the API.");
     const shopifyStores = storeList.data.filter(store => /^https:\/\/[a-z0-9][a-z0-9-]*\.myshopify\.com\/?$/.test(store.domain));
     const statuses = await Promise.allSettled(shopifyStores.map(store => call<ShopifyConnection>(`stores/${store.id}/shopify`)));
-    setConnections(Object.fromEntries(shopifyStores.map((store, i) => {
+    setConnections(previous => Object.fromEntries(shopifyStores.map((store, i) => {
       const status = statuses[i];
-      return [store.id, status.status === "fulfilled" ? status.value : { store_id: store.id, status: "unknown" as const }];
+      return [store.id, preserveShopifySync(previous[store.id], status.status === "fulfilled" ? status.value : { store_id: store.id, status: "unknown" as const })];
     })));
   }
   useEffect(() => {
@@ -43,7 +45,7 @@ export default function SellerConsole() {
         setLaunchShop(pending.shop);
         if (pending.shop) setNotice(`Shopify verified ${pending.shop}. Select the Metr store you want to link after signing in. This launch has not authorized a connection.`);
       }).catch(err => { setLaunchShop(null); setSelectedStoreID(""); if (launched || result === "launch_verified" || err.code === "invalid_launch") { setError(err.message); setRequestID(err.requestID); } });
-    if (result === "authorized") setNotice("Shopify returned to the console. Check your store’s authorization status below. Catalog import and the storefront widget are still pending.");
+    if (result === "authorized") setNotice("Shopify returned to the console. Check your store’s authorization status below. Select Sync catalog to import products. The storefront widget is still pending.");
     if (result === "failed") setError("Shopify authorization could not finish. Start a new connection from this console. If it fails again, check the backend connection configuration.");
     if (result === "sign_in") setNotice("Sign in, then start your Shopify connection again.");
     const accountCheck = refresh().catch(err => { if (err.status !== 401) { setError(err.message); setRequestID(err.requestID); } });
@@ -67,6 +69,29 @@ export default function SellerConsole() {
   }
   async function connect(store: Store) {
     await run(async () => { const result = await call<{ authorization_url: string }>(`stores/${store.id}/shopify/start`, "POST", {}); const url = new URL(result.authorization_url); if (url.protocol !== "https:" || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(url.hostname) || url.pathname !== "/admin/oauth/authorize") throw new Error("Invalid Shopify authorization address."); window.location.assign(url.href); });
+  }
+  async function syncCatalog(store: Store) {
+    if (busy || syncLock.current) return;
+    syncLock.current = true;
+    setSyncingStore(store.id);
+    await run(async () => {
+      setNotice(""); setRetryStore(null);
+      try {
+        const result = await call<ShopifySyncResult>(`stores/${store.id}/shopify/sync`, "POST", {});
+        setNotice(shopifySyncMessage(result));
+      } catch (err) {
+        setError(shopifySyncFailure(err));
+        setRequestID(shopifyRequestID((err as { requestID?: string }).requestID));
+        setRetryStore(store.id);
+      }
+      try {
+        const connection = await call<ShopifyConnection>(`stores/${store.id}/shopify`);
+        setConnections(previous => ({ ...previous, [store.id]: preserveShopifySync(previous[store.id], connection) }));
+      } catch {
+        setConnections(previous => ({ ...previous, [store.id]: preserveShopifySync(previous[store.id], { store_id: store.id, status: "unknown" }) }));
+      }
+    });
+    setSyncingStore(null); syncLock.current = false;
   }
   const selectedStore = stores.find(store => store.id === selectedStoreID);
   const errorDetails = requestID ? <p className="console-small">Request ID: <code>{requestID}</code></p> : null;
@@ -96,10 +121,10 @@ export default function SellerConsole() {
       <button className="console-primary" disabled={busy || !seller.shopify_enabled || !selectedStore} onClick={() => { if (selectedStore) void connect(selectedStore); }}>{busy ? "Starting authorization…" : "Continue to Shopify"}</button>
       {stores.length === 0 && <p>Add a Metr store below, then select it here.</p>}
     </section>}
-    {tab === "stores" && <div className="console-columns"><div><h2>Your stores</h2>{stores.length === 0 ? <div className="console-empty"><h3>Add your first store</h3><p>Your store ID connects its products, size charts and recommendations. Start with a sample store while you test.</p></div> : <ul className="console-store-list">{stores.map(store => { const status = connections[store.id]?.status; const shop = /^https:\/\/[a-z0-9][a-z0-9-]*\.myshopify\.com\/?$/.test(store.domain); return <li key={store.id}><h3>{store.name}</h3><p>{store.domain}</p><code>{store.id}</code><p className="console-small">{status === "authorized" ? (connections[store.id]?.last_sync_at ? "Shopify authorized · catalog synchronized" : "Shopify authorized · ready to sync catalog") : status === "reauthorization_required" ? "Shopify authorization expired · reconnect to continue" : status === "unknown" ? "Could not check Shopify status · refresh to retry" : shop ? "Shopify not connected" : "Custom API · create a key to integrate"}</p>{shop && <div className="console-actions"><button disabled={busy || !seller.shopify_enabled || !!launchShop} onClick={() => void connect(store)}>{launchShop ? "Select this store above" : status === "authorized" ? "Authorize again" : "Connect Shopify"}</button>{status === "authorized" && <button disabled={busy} onClick={() => void run(async () => { const res = await call(`stores/${store.id}/shopify/sync`, "POST") as { total_products?: number; total_variants?: number }; await refresh(); setNotice(`Shopify catalog synchronized: ${res?.total_products ?? 0} products, ${res?.total_variants ?? 0} variants.`); })}>Sync catalog</button>}{["authorized", "reauthorization_required"].includes(status || "") && <button disabled={busy} onClick={() => void run(async () => { await call(`stores/${store.id}/shopify`, "DELETE"); await refresh(); setNotice("Stored Shopify credentials removed. To uninstall the app, use Shopify admin."); })}>Remove connection</button>}</div>}</li>; })}</ul>}{!seller.shopify_enabled && <p className="console-small">Shopify authorization is awaiting operator configuration. Custom API integration is available.</p>}</div>
+    {tab === "stores" && <div className="console-columns"><div><h2>Your stores</h2>{stores.length === 0 ? <div className="console-empty"><h3>Add your first store</h3><p>Your store ID connects its products, size charts and recommendations. Start with a sample store while you test.</p></div> : <ul className="console-store-list">{stores.map(store => { const status = connections[store.id]?.status; const shop = /^https:\/\/[a-z0-9][a-z0-9-]*\.myshopify\.com\/?$/.test(store.domain); return <li key={store.id}><h3>{store.name}</h3><p>{store.domain}</p><code>{store.id}</code><p className="console-small">{status === "authorized" ? (connections[store.id]?.last_sync_at ? `Last successful sync: ${new Date(connections[store.id]!.last_sync_at!).toLocaleString()}.` : "Shopify connected · catalog not imported.") : status === "reauthorization_required" ? "Shopify authorization expired · reconnect to continue" : status === "unknown" ? "Could not check Shopify status · refresh to retry" : shop ? "Shopify not connected" : "Custom API · create a key to integrate"}</p>{status !== "authorized" && connections[store.id]?.last_sync_at && <p className="console-small">Last successful sync: {new Date(connections[store.id]!.last_sync_at!).toLocaleString()}.</p>}{connections[store.id]?.last_sync_at && <p className="console-small">Catalog imported. Add and verify size charts to enable recommendations.</p>}{shop && <div className="console-actions"><button disabled={busy || !seller.shopify_enabled || !!launchShop} onClick={() => void connect(store)}>{launchShop ? "Select this store above" : status === "authorized" ? "Authorize again" : status === "reauthorization_required" ? "Reconnect Shopify" : "Connect Shopify"}</button>{(status === "authorized" || retryStore === store.id && shopifySyncAction(status) === "retry") && <button disabled={busy} onClick={() => void syncCatalog(store)}>{syncingStore === store.id ? "Syncing catalog…" : retryStore === store.id ? "Retry sync" : "Sync catalog"}</button>}{["authorized", "reauthorization_required"].includes(status || "") && <button disabled={busy} onClick={() => void run(async () => { await call(`stores/${store.id}/shopify`, "DELETE"); setConnections(previous => { const remaining = { ...previous }; delete remaining[store.id]; return remaining; }); setRetryStore(null); await refresh(); setNotice("Stored Shopify credentials removed. To uninstall the app, use Shopify admin."); })}>Remove connection</button>}</div>}</li>; })}</ul>}{!seller.shopify_enabled && <p className="console-small">Shopify authorization is awaiting operator configuration. Custom API integration is available.</p>}</div>
       <aside><h2>Add a store</h2><form onSubmit={createStore}><fieldset disabled={busy}><label>Integration<select value={kind} onChange={event => setKind(event.target.value)}><option value="shopify" disabled={!seller.shopify_enabled}>Shopify{!seller.shopify_enabled ? " (not configured)" : ""}</option><option value="custom">Custom API</option></select></label><label>Store name<input name="name" maxLength={120} required /></label><label key={kind}>{kind === "shopify" ? "Shopify store address" : "Store URL"}<input name="domain" type="url" defaultValue={kind === "shopify" && launchShop ? `https://${launchShop}` : undefined} placeholder={kind === "shopify" ? "https://your-store.myshopify.com" : "https://your-store.com"} pattern={kind === "shopify" ? "https://[a-z0-9][a-z0-9-]*\\.myshopify\\.com/?" : undefined} maxLength={240} required /></label><p className="console-small">{kind === "shopify" ? "Use the permanent myshopify.com address, not your custom domain." : "Calls to Metr must come from your backend."}</p><button className="console-primary">{busy ? "Saving…" : "Add store"}</button></fieldset></form></aside></div>}
     {tab === "keys" && <><div className="console-columns"><div><h2>Integration keys</h2><p>Store keys on your backend. Each key can access only its assigned store and scopes.</p>{secret && <div className="console-secret"><h3>Save this key now</h3><p>It is shown once. Save it in your server’s secret manager.</p><code>{secret}</code><div className="console-actions"><button onClick={() => void run(async () => { await navigator.clipboard.writeText(secret); setNotice("Key copied. Save it securely on your server."); })}>Copy key</button><button onClick={() => setSecret("")}>Hide key</button></div></div>}{keys.length === 0 ? <p>No API keys yet.</p> : <ul className="console-store-list">{keys.map(key => <li key={key.id}><h3>{key.name}</h3><p><code>{key.prefix}…</code> · {key.revoked_at ? "Revoked" : key.expires_at && new Date(key.expires_at) < new Date() ? "Expired" : "Active"}</p><p className="console-small">{key.scopes.join(" · ")}<br />Store: {stores.find(store => store.id === key.store_id)?.name || key.store_id || "All stores"}</p>{!key.revoked_at && <button disabled={busy} onClick={() => { if (window.confirm(`Revoke “${key.name}”? Integrations using it will stop working.`)) void run(async () => { await call(`api-keys/${key.id}`, "DELETE"); await refresh(); setNotice("API key revoked."); }); }}>Revoke key</button>}</li>)}</ul>}</div><aside><h2>Create an API key</h2>{stores.length ? <form onSubmit={createKey}><fieldset disabled={busy}><label>Key name<input name="name" required maxLength={120} defaultValue="Store integration" /></label><label>Store<select name="store">{stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label><fieldset className="console-scopes"><legend>Permissions</legend>{["catalog", "fit", "events", "analytics"].map(scope => <label key={scope}><input type="checkbox" name="scopes" value={scope} defaultChecked={scope !== "analytics"} />{scope}</label>)}</fieldset><button className="console-primary">{busy ? "Creating…" : "Create key"}</button></fieldset></form> : <p>Add a store before creating a key.</p>}</aside></div></>}
-    {tab === "guide" && <div className="console-guide"><h2>From store to sizing</h2><ol><li><h3>Connect your store</h3><p>Authorize Shopify or issue a store-scoped key for your backend.</p></li><li><h3>Prepare your catalog</h3><p>Use the catalog API to create products, variants and merchant-verified charts. Automatic Shopify import is not included yet.</p></li><li><h3>Run the customer quiz</h3><p>Your backend starts a sizing session, requests each next question and submits the answers for a recommendation. Never expose API keys in theme code.</p></li><li><h3>Connect the result to checkout</h3><p>Recheck inventory, let the customer choose, and report confirmed purchases and size returns from your backend.</p></li></ol><p>Confidence is an uncalibrated evidence score. Show the size chart if sizing cannot recommend a suitable size.</p><Link className="console-primary" href="/docs">Open API documentation →</Link></div>}
+    {tab === "guide" && <div className="console-guide"><h2>From store to sizing</h2><ol><li><h3>Connect your store</h3><p>Authorize Shopify or issue a store-scoped key for your backend.</p></li><li><h3>Prepare your catalog</h3><p>After connecting Shopify, explicitly select Sync catalog to import products and variants. Resync preserves product type, gender, fit, stretch and chart links; missing Shopify items become unavailable. Sync imports no charts. Add and verify size charts to enable recommendations. For custom integrations, use the catalog API.</p></li><li><h3>Run the customer quiz</h3><p>Your backend starts a sizing session, requests each next question and submits the answers for a recommendation. Never expose API keys in theme code.</p></li><li><h3>Connect the result to checkout</h3><p>Recheck inventory, let the customer choose, and report confirmed purchases and size returns from your backend.</p></li></ol><p>Confidence is an uncalibrated evidence score. Show the size chart if sizing cannot recommend a suitable size.</p><Link className="console-primary" href="/docs">Open API documentation →</Link></div>}
     </div>
   </section>;
 }

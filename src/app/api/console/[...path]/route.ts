@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { consoleEndpoint, consoleOriginAllowed, limitedText, shopifyCallbackResult, shopifyAppLaunch, shopifyLaunchQuery, shopifyRequestID } from "@/lib/console";
+import { consoleErrorCode, consoleEndpoint, consoleOriginAllowed, limitedText, shopifyCallbackResult, shopifyAppLaunch, shopifyLaunchQuery, shopifyRequestID } from "@/lib/console";
 export const runtime = "nodejs";
 const cookieName = process.env.NODE_ENV === "production" ? "__Host-metr_console" : "metr_console";
 const launchCookieName = process.env.NODE_ENV === "production" ? "__Host-metr_shopify_launch" : "metr_shopify_launch";
@@ -13,7 +13,7 @@ const goToConsole = (site: string, result: string, requestID?: unknown) => {
   return NextResponse.redirect(url, { headers: noStore });
 };
 const failure = (error: string, status: number, code?: unknown, requestID?: unknown) => NextResponse.json({
-  error, ...(typeof code === "string" ? { code: shopifyCallbackResult(false, status, code) } : {}),
+  error, ...(typeof code === "string" ? { code: consoleErrorCode(code) } : {}),
   ...(shopifyRequestID(requestID) ? { request_id: shopifyRequestID(requestID) } : {}),
 }, { status, headers: noStore });
 const clearLaunch = (response: NextResponse) => {
@@ -25,6 +25,7 @@ async function handle(request: Request, context: Context) {
   const { path } = await context.params;
   const endpoint = consoleEndpoint(request.method, path);
   if (!endpoint) return failure("Console endpoint not found.", 404);
+  const sync = request.method === "POST" && endpoint.endsWith("/shopify/sync");
   const callback = endpoint.endsWith("/shopify/callback");
   const params = new URL(request.url).searchParams;
   const launchRedirect = callback && shopifyAppLaunch(params);
@@ -103,7 +104,7 @@ async function handle(request: Request, context: Context) {
     if (query.length > 8192) return failure("Invalid Shopify callback.", 400);
     const upstream = await fetch(`${base}${endpoint}${query}`, {
       method: request.method, headers: { "Content-Type": "application/json", "X-Metr-Console-Key": proxyKey, ...(!auth && token ? { Authorization: `Bearer ${token}` } : {}) }, body,
-      cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15000),
+      cache: "no-store", redirect: "error", signal: AbortSignal.timeout(sync ? 35000 : 15000),
     });
     const payload = JSON.parse(await limitedText(upstream.body, 256 * 1024));
     if (callback) return clearLaunch(goToConsole(site, shopifyCallbackResult(upstream.ok, upstream.status, payload.error?.code), payload.error?.request_id));
@@ -127,6 +128,7 @@ async function handle(request: Request, context: Context) {
     return response;
   } catch {
     if (callback) return goToConsole(site, "failed");
+    if (sync) return failure("Could not confirm sync completion.", 502, "sync_unconfirmed");
     return failure("The console service is unavailable. Please try again shortly.", 502);
   }
 }
