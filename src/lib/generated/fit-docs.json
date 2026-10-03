@@ -117,7 +117,7 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Once authorized, the console imports Shopify products, variants and inventory into Metr. S/M/L and Small/Medium/Large size names are mapped to standard size identifiers, and Shopify product types map to Metr's sizing categories. Stock availability stays current through Shopify inventory/product webhooks and scheduled background resynchronization."
+            "text": "After authorization, trigger catalog sync explicitly. The importer uses Shopify Admin GraphQL 2026-07 and completes product and variant pagination before writing. Authentication, paging and write errors fail the sync without committing a partial catalog. Sizes and product types are normalized. Resync preserves merchant sizing metadata and verified chart links, and marks missing Shopify variants unavailable. Recommendations still require merchant-verified size charts. Webhook subscriptions are not registered automatically; the in-process resync timer is not reliable on scale-to-zero hosting. Stock freshness is not guaranteed."
           },
           {
             "type": "code",
@@ -407,7 +407,7 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Do not put secret keys in themes, browser JavaScript, mobile apps, URLs or analytics. Your backend must authorize the customer\u2019s session before forwarding answers. Validate webhook signatures in your integration before forwarding purchase/return events. The optional seller console supports accounts, store-scoped keys and Shopify OAuth authorization. Shopify catalog sync, storefront proxy and outcome webhooks are not implemented yet."
+            "text": "Do not put secret keys in themes, browser JavaScript, mobile apps, URLs or analytics. Your backend must authorize the customer\u2019s session before forwarding answers. Validate webhook signatures in your integration before forwarding purchase/return events. The optional seller console supports accounts, store-scoped keys and Shopify OAuth authorization. Explicit Shopify catalog sync is implemented. Storefront proxy and outcome webhooks remain pending."
           }
         ]
       }
@@ -1079,7 +1079,7 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The optional seller console supports account signup/login, store creation, scoped keys and Shopify OAuth authorization. It is not a complete Shopify app: automatic catalog sync, the storefront widget, token refresh and outcome webhooks remain pending. No JavaScript SDK, payment flow or Discover API ships with Fit V1."
+            "text": "The optional seller console supports account signup/login, store creation, scoped keys and Shopify OAuth authorization. It is not a complete Shopify app: reliable scheduled catalog sync, webhook registration, the storefront widget and outcome webhooks remain pending. Token refresh and explicit catalog sync are implemented. No JavaScript SDK, payment flow or Discover API ships with Fit V1."
           }
         ]
       }
