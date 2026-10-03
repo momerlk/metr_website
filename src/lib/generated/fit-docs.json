@@ -48,6 +48,93 @@
     ]
   },
   {
+    "slug": "shopify-authorization",
+    "title": "Shopify authorization",
+    "description": "Verify an app launch and authorize a shop; catalog sync and storefront sizing remain separate.",
+    "sections": [
+      {
+        "title": "Configure the standalone app",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Set the app launch URL to https://metr.so/console and register https://metr.so/api/console/shopify/callback as the exact redirect. The API requests read_products,read_inventory. App credentials and the stable token-encryption key belong in server-side Secret Manager configuration, never in themes or browser JavaScript."
+          }
+        ]
+      },
+      {
+        "title": "Verify the launch",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "A launch without code and state is not completed authorization. The website backend sends the original signed query in a JSON body to the gateway-only endpoint below. Go verifies HMAC, shop syntax, unique query parameters and freshness. The response contains only shop; it saves no connection and creates no OAuth state."
+          },
+          {
+            "type": "code",
+            "text": "POST /v1/console/shopify/launch",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "{\n  \"query\": \"<original Shopify-signed launch query without a leading ?>\"\n}",
+            "language": "json"
+          },
+          {
+            "type": "paragraph",
+            "text": "Retain the signed launch privately for at most ten minutes, require seller sign-in and explicit Metr store selection, and reverify before starting OAuth. An unsigned shop query is never proof of authorization."
+          }
+        ]
+      },
+      {
+        "title": "Start and complete authorization",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The website sends launch_query in the authenticated store-specific start body, or an empty object for the ordinary flow. The backend scopes the selected store to the merchant and binds fresh single-use state to its store-domain snapshot, seller session and the verified Shopify shop. It does not silently rewrite the saved storefront domain."
+          },
+          {
+            "type": "code",
+            "text": "POST /v1/console/stores/{store_id}/shopify/start",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "{\n  \"launch_query\": \"<original Shopify-signed launch query>\"\n}",
+            "language": "json"
+          },
+          {
+            "type": "paragraph",
+            "text": "The callback requires Shopify HMAC, a fresh timestamp, the originating session, unexpired single-use state and an exact shop match. Only a successful token exchange with the required scopes saves AES-GCM encrypted tokens. An app launch alone cannot save a connection."
+          },
+          {
+            "type": "code",
+            "text": "GET /v1/console/shopify/callback",
+            "language": "text"
+          }
+        ]
+      },
+      {
+        "title": "Failures and limits",
+        "blocks": [
+          {
+            "type": "list",
+            "items": [
+              "shop_mismatch: the verified callback shop differs from the shop in this session's state. Open the app from Shopify and start a new authorization for its verified shop.",
+              "invalid_callback: callback signature, timestamp or required fields failed validation.",
+              "invalid_state: state expired, was consumed, is missing or belongs to another tenant/session.",
+              "invalid_launch: the launch signature, fields or freshness could not be verified. Open the app again from Shopify.",
+              "store_changed: the saved store domain changed during authorization.",
+              "shopify_unavailable: token exchange failed; start a fresh authorization."
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "Authorization does not import a catalog or install a sizing widget. Automatic token refresh is not implemented; expired tokens require reauthorization. Never log launch/callback queries, codes, state, credentials or tokens."
+          }
+        ]
+      }
+    ]
+  },
+  {
     "slug": "quickstart",
     "title": "Your first size recommendation",
     "description": "Create a merchant, connect a store and complete one sizing session.",

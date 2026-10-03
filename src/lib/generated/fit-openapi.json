@@ -540,6 +540,33 @@
         ],
         "type": "object"
       },
+      "ConsoleShopifyLaunch": {
+        "additionalProperties": false,
+        "properties": {
+          "shop": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop"
+        ],
+        "type": "object"
+      },
+      "ConsoleShopifyLaunchInput": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "description": "Original Shopify-signed app-launch query without a leading question mark. Never log it or accept an unsigned shop override.",
+            "maxLength": 2000,
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
       "ConsoleShopifyStart": {
         "additionalProperties": false,
         "properties": {
@@ -554,7 +581,14 @@
       },
       "ConsoleShopifyStartInput": {
         "additionalProperties": false,
-        "properties": {},
+        "properties": {
+          "launch_query": {
+            "description": "Original Shopify-signed app-launch query without a leading question mark. Never log it or accept an unsigned shop override.",
+            "maxLength": 2000,
+            "type": "string",
+            "writeOnly": true
+          }
+        },
         "required": [],
         "type": "object"
       },
@@ -4154,6 +4188,183 @@
         "summary": "Validate Shopify authorization callback",
         "tags": [
           "console"
+        ]
+      }
+    },
+    "/v1/console/shopify/launch": {
+      "post": {
+        "description": "Website backend only. Verifies a fresh Shopify-signed app-launch query. Does not authorize a shop, create OAuth state or save a connection.",
+        "operationId": "post_v1_console_shopify_launch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsoleShopifyLaunchInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsoleShopifyLaunch"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Invalid JSON or query"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Invalid or expired API key"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing scope or wrong store restriction"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found within tenant"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Method not allowed"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict or non-identical replay"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Fit session expired"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request body too large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Expected application/json"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed or sizing abstained"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited; Retry-After header gives seconds"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Upstream service unavailable"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Dependency unavailable"
+          }
+        },
+        "security": [
+          {
+            "ConsoleGateway": []
+          }
+        ],
+        "summary": "Verify a signed Shopify app launch (not authorization)",
+        "tags": [
+          "public"
         ]
       }
     },

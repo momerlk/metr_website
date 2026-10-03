@@ -52,7 +52,16 @@ Atlas database. Server credentials and session tokens never enter browser JSON.
 New integration API-key secrets are deliberately shown once to save on a backend.
 
 Shopify authorization additionally requires the API's Shopify app configuration.
-Register `https://metr.so/api/console/shopify/callback` as the app redirect URL.
+Register `https://metr.so/api/console/shopify/callback` as the app redirect URL
+and `https://metr.so/console` as its standalone launch URL. Signed app launches
+are verified by the API, retained in a short-lived HttpOnly cookie through sign-in,
+and used only after the seller explicitly selects an owned Metr store and reviews
+both the verified Shopify shop and saved Metr store. Signed launch parameters are
+removed from the browser URL. Expired or malformed launch cookies are cleared.
+Callback failures preserve only fixed error categories and validated request IDs. After building, run
+`node scripts/verify-shopify-proxy.mjs` to check the real gateway and cookies
+with a local fixture API; this does not test Atlas or live Shopify. Launches alone never save
+a connection; OAuth still requires HMAC and exact session/state/shop checks.
 Authorization does not import products or install a sizing widget. Expired access
 tokens require reconnection until automatic token refresh is implemented.
 See `../metr_api/docs/console.md` for setup, implemented boundaries and release gates.
