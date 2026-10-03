@@ -93,3 +93,7 @@ the app credentials, encryption key and `https://metr.so/api/console/shopify/cal
 Production Turbopack disk caching is disabled because its cache can retain server
 credential values. If Netlify restored a cache from an older build, use **Clear
 cache and deploy site** after this change. Keep secret scanning enabled.
+
+Netlify secret scanning excludes only the public `SITE_URL`, `METR_API_URL` and
+`AWS_LAMBDA_JS_RUNTIME` settings. Keep `CONSOLE_PROXY_KEY` and `METR_API_KEY` marked
+as secrets and scanned. Public URLs are expected in generated metadata and docs.

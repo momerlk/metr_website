@@ -4,3 +4,5 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Public URLs and runtime labels are expected in docs and generated pages.
+  SECRETS_SCAN_OMIT_KEYS = "SITE_URL,METR_API_URL,AWS_LAMBDA_JS_RUNTIME"
