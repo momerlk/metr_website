@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Header, Footer } from "@/components/site";
 import "./globals.css";
 const description =
   "Size recommendations for fashion stores. Metr asks customers a short fit quiz and recommends a size for the product they are viewing, using your approved size charts.";
@@ -29,9 +28,7 @@ export default function RootLayout({
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <Header />
-        <main id="main">{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   );
