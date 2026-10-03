@@ -1,12 +1,15 @@
 import Link from "next/link";
+import ConsoleIcon from "@/components/console-icon";
 import "./console.css";
 
 export default function ConsoleLayout({ children }: { children: React.ReactNode }) {
   return <div className="console-shell">
-    <header className="console-topbar">
-      <Link href="/console" className="console-brand" aria-label="Metr console"><img src="/brand/metr-horizontal-white.svg" alt="Metr" width="100" height="22" /><span>Console</span></Link>
-      <div className="console-topbar-links"><Link href="/docs">API docs ↗</Link><Link href="/">Metr website ↗</Link></div>
-    </header>
+    <nav className="console-rail" aria-label="Metr">
+      <Link href="/" className="console-rail-brand" aria-label="Metr website"><img src="/brand/metr-icon-white-on-black.svg" alt="" width="34" height="34" /></Link>
+      <Link href="/console" className="console-rail-current" aria-label="Seller console" aria-current="page" title="Seller console"><ConsoleIcon name="stores" /></Link>
+      <Link href="/docs" aria-label="API documentation" title="API documentation"><ConsoleIcon name="guide" /></Link>
+      <span className="console-rail-caption" aria-hidden="true">METR FIT</span>
+    </nav>
     <main id="main">{children}</main>
   </div>;
 }
