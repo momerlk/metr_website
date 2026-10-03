@@ -132,6 +132,49 @@
         ]
       },
       {
+        "title": "Seller catalog and shared size charts",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The seller console can browse store-scoped products and variant availability, create or review size charts, and assign one chart to multiple products. Availability is a stored boolean, not a live stock quantity. The website accepts CSV tables, lets the seller review measurements and requires explicit verification before a chart can support recommendations. CSV files are parsed in the browser and submitted as the existing ChartInput JSON schema; there is no image or PDF extraction endpoint."
+          },
+          {
+            "type": "code",
+            "text": "GET /v1/console/stores/{store_id}/products",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "GET /v1/console/stores/{store_id}/products/{product_id}/variants",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "POST /v1/console/stores/{store_id}/size-charts",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "PUT /v1/console/stores/{store_id}/size-charts/{chart_id}",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "POST /v1/console/stores/{store_id}/size-charts/{chart_id}/products",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "{\n  \"product_ids\": [\n    \"REPLACE_WITH_PRODUCT_ID\",\n    \"REPLACE_WITH_ANOTHER_PRODUCT_ID\"\n  ]\n}",
+            "language": "json"
+          },
+          {
+            "type": "paragraph",
+            "text": "Assignment accepts 1\u2013100 unique product IDs in the same store and category. It atomically replaces only their chart links and update timestamps; all other product fields and unselected links remain unchanged. Draft charts can be assigned but cannot enable recommendations. Editing a shared chart updates it for all linked products. These endpoints require both the server-only console gateway key and the seller session; integration keys cannot call them."
+          }
+        ]
+      },
+      {
         "title": "Failures and limits",
         "blocks": [
           {

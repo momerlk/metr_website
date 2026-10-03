@@ -1,8 +1,10 @@
-type IconName = "stores" | "keys" | "guide" | "arrow" | "plus" | "close" | "more" | "logout" | "check";
+type IconName = "stores" | "catalog" | "charts" | "keys" | "guide" | "arrow" | "plus" | "close" | "more" | "logout" | "check";
 
 export default function ConsoleIcon({ name }: { name: IconName }) {
   const paths: Record<IconName, React.ReactNode> = {
     stores: <><path d="M3 9h18l-2-5H5L3 9Z" /><path d="M4 9v11h16V9M9 20v-7h6v7M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" /></>,
+    catalog: <><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z" /><path d="m3 7 9 4 9-4M12 11v10M7 5l9 4" /></>,
+    charts: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M8 5v14M14 10v9" /></>,
     keys: <><circle cx="8" cy="9" r="5" /><path d="m12 13 8 8m-4-4 3-3m-6 0 3-3" /></>,
     guide: <><path d="M12 5v15M3 4h5a4 4 0 0 1 4 2 4 4 0 0 1 4-2h5v15h-5a4 4 0 0 0-4 2 4 4 0 0 0-4-2H3V4Z" /></>,
     arrow: <><path d="M5 12h14m-5-5 5 5-5 5" /></>,

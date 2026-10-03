@@ -5,12 +5,20 @@ export type ShopifyConnection = { store_id: string; shop?: string; status: "not_
 const identifier = /^[A-Za-z0-9_-]{1,64}$/;
 export function consoleEndpoint(method: string, path: string[]): string | null {
   if (path.length === 1) {
-    const allowed: Record<string, string[]> = { signup: ["POST"], login: ["POST"], logout: ["POST"], me: ["GET"], stores: ["GET", "POST"], "api-keys": ["GET", "POST"] };
+    const allowed: Record<string, string[]> = { signup: ["POST"], login: ["POST"], logout: ["POST"], me: ["GET"], "product-types": ["GET"], stores: ["GET", "POST"], "api-keys": ["GET", "POST"] };
     return allowed[path[0]]?.includes(method) ? `/v1/console/${path[0]}` : null;
   }
   if (path.length === 2 && path[0] === "api-keys" && identifier.test(path[1]) && method === "DELETE") return `/v1/console/api-keys/${path[1]}`;
   if (path.length === 2 && path[0] === "shopify" && path[1] === "launch" && ["GET", "POST"].includes(method)) return "/v1/console/shopify/launch";
   if (path.length === 2 && path[0] === "shopify" && path[1] === "callback" && method === "GET") return "/v1/console/shopify/callback";
+  if (path[0] === "stores" && identifier.test(path[1] || "")) {
+    const resource = path[2];
+    if (resource === "products" && method === "GET" && (path.length === 3 || identifier.test(path[3] || "") && (path.length === 4 || path.length === 5 && path[4] === "variants"))) return `/v1/console/${path.join("/")}`;
+    if (resource === "size-charts") {
+      if (path.length === 3 && ["GET", "POST"].includes(method)) return `/v1/console/${path.join("/")}`;
+      if (identifier.test(path[3] || "") && (path.length === 4 && ["GET", "PUT"].includes(method) || path.length === 5 && path[4] === "products" && method === "POST")) return `/v1/console/${path.join("/")}`;
+    }
+  }
   if (path[0] === "stores" && identifier.test(path[1] || "") && path[2] === "shopify") {
     if (path.length === 3 && ["GET", "DELETE"].includes(method)) return `/v1/console/stores/${path[1]}/shopify`;
     if (path.length === 4 && path[3] === "start" && method === "POST") return `/v1/console/stores/${path[1]}/shopify/start`;
@@ -77,7 +85,7 @@ export function shopifySyncMessage(value: unknown): string {
   return `Catalog synced: ${result.total_products} products and ${result.total_variants} variants.`;
 }
 export function consoleErrorCode(code: unknown): string {
-  const allowed = [...Object.keys(shopifyCallbackErrors), "sync_failed", "reauthorization_required", "sync_unconfirmed"];
+  const allowed = [...Object.keys(shopifyCallbackErrors), "sync_failed", "reauthorization_required", "sync_unconfirmed", "validation_error", "invalid_reference", "not_found", "conflict", "payload_too_large"];
   return typeof code === "string" && allowed.includes(code) ? code : "failed";
 }
 export function preserveShopifySync(previous: ShopifyConnection | undefined, current: ShopifyConnection): ShopifyConnection {
@@ -91,4 +99,13 @@ export function shopifySyncFailure(error: unknown): string {
 
 export function shopifySyncAction(status: ShopifyConnection["status"] | undefined): "reconnect" | "retry" {
   return status === "reauthorization_required" ? "reconnect" : "retry";
+}
+
+export function consoleListRequest(method: string, path: string[]): boolean {
+  return method === "GET" && (path.length === 1 && ["stores", "api-keys"].includes(path[0]) || path[0] === "stores" && (path.length === 3 && ["products", "size-charts"].includes(path[2]) || path.length === 5 && path[2] === "products" && path[4] === "variants"));
+}
+export function consolePagination(params: URLSearchParams): string {
+  const limit = params.get("limit") || "50", cursor = params.get("cursor");
+  if (!/^\d+$/.test(limit) || Number(limit) < 1 || Number(limit) > 100 || cursor && !identifier.test(cursor)) throw new Error("Invalid pagination.");
+  return "?" + new URLSearchParams({ limit, ...(cursor ? { cursor } : {}) }).toString();
 }

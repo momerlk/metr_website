@@ -1,18 +1,14 @@
 "use client";
 import Link from "next/link";
+import { consoleCall as call } from "@/lib/console-client";
+import ConsoleCatalog from "@/components/console-catalog";
 import ConsoleIcon from "@/components/console-icon";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { shopifySyncAction, shopifySyncMessage, shopifySyncFailure, preserveShopifySync, shopifyCallbackErrors, shopifyAppLaunch, shopifyRequestID, type Seller, type Store, type APIKey, type ShopifyConnection, type ShopifySyncResult } from "@/lib/console";
 
-async function call<T>(path: string, method = "GET", data?: unknown): Promise<T> {
-  const response = await fetch(`/api/console/${path}`, { method, headers: { "Content-Type": "application/json", "X-Metr-Console": "1" }, ...(data !== undefined ? { body: JSON.stringify(data) } : {}), cache: "no-store" });
-  const result = await response.json();
-  if (!response.ok) throw Object.assign(new Error(result.error || "Please try again."), { status: response.status, code: result.code, requestID: shopifyRequestID(result.request_id) });
-  return result;
-}
 export default function SellerConsole() {
   const [seller, setSeller] = useState<Seller | null>(null), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("signup"), [tab, setTab] = useState<"stores" | "keys" | "guide">("stores");
+  const [mode, setMode] = useState<"login" | "signup">("signup"), [tab, setTab] = useState<"stores" | "catalog" | "charts" | "keys" | "guide">("stores");
   const [stores, setStores] = useState<Store[]>([]), [keys, setKeys] = useState<APIKey[]>([]), [connections, setConnections] = useState<Record<string, ShopifyConnection>>({});
   const [error, setError] = useState(""), [notice, setNotice] = useState(""), [secret, setSecret] = useState("");
   const [launchShop, setLaunchShop] = useState<string | null>(null);
@@ -24,6 +20,7 @@ export default function SellerConsole() {
   const [formKind, setFormKind] = useState<"store" | "key" | null>(null);
   const [helpOpen, setHelpOpen] = useState(true);
   useEffect(() => { if (formKind) { setError(""); setRequestID(undefined); dialog.current?.showModal(); } else dialog.current?.close(); }, [formKind]);
+  const [catalogStoreID, setCatalogStoreID] = useState("");
   const [kind, setKind] = useState("custom");
   async function refresh() {
     const account = await call<Seller>("me"); setSeller(account);
@@ -110,7 +107,8 @@ export default function SellerConsole() {
       <button className="console-primary" type="submit">{busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}</button>
     </fieldset></form><p className="console-error" role="alert">{error}</p>{errorDetails}<p role="status">{notice}</p><p className="console-small">Email verification and self-service password recovery are not available in this initial version.</p></div>
   </section>;
-  const sectionTitle = tab === "stores" ? "Stores" : tab === "keys" ? "API keys" : "Integration guide";
+  const titles = { stores: "Stores", catalog: "Catalog & inventory", charts: "Size charts", keys: "API keys", guide: "Integration guide" };
+  const sectionTitle = titles[tab];
   const hasConnectedCatalog = Object.values(connections).some(connection => connection.status === "authorized" && connection.last_sync_at);
   const hasImport = Object.values(connections).some(connection => connection.last_sync_at);
   return <section className={`console-wrap console-workspace${helpOpen ? " console-with-help" : ""}`}>
@@ -121,8 +119,8 @@ export default function SellerConsole() {
         <div><strong>{seller.merchant.name}</strong><span>Seller workspace</span></div>
       </div>
       <nav className="console-tabs" aria-label="Console sections">
-        {([ ["stores", "Stores"], ["keys", "API keys"], ["guide", "Integration guide"] ] as const).map(([value, label]) =>
-          <button key={value} aria-current={tab === value ? "page" : undefined} onClick={() => { setTab(value); setSecret(""); }}><ConsoleIcon name={value} />{label}{value === "stores" && <span className="console-nav-count">{stores.length}</span>}</button>
+        {([ ["stores", "Stores"], ["catalog", "Catalog & inventory"], ["charts", "Size charts"], ["keys", "API keys"], ["guide", "Integration guide"] ] as const).map(([value, label]) =>
+          <button key={value} disabled={busy} aria-current={tab === value ? "page" : undefined} onClick={() => { setTab(value); setSecret(""); }}><ConsoleIcon name={value} />{label}{value === "stores" && <span className="console-nav-count">{stores.length}</span>}</button>
         )}
       </nav>
       <div className="console-sidebar-resources"><span className="console-label">Resources</span><Link href="/docs"><ConsoleIcon name="guide" />API documentation <span aria-hidden="true">↗</span></Link><Link href="/">Visit Metr <span aria-hidden="true">↗</span></Link></div>
@@ -135,13 +133,14 @@ export default function SellerConsole() {
     <div className="console-content">
       <div className="console-toolbar"><span><ConsoleIcon name={tab} />{sectionTitle}</span><button className="console-help-toggle" aria-expanded={helpOpen} aria-controls="console-help" onClick={() => setHelpOpen(!helpOpen)}><ConsoleIcon name="guide" />Setup guide</button></div>
       <div className="console-page">
-        <div className="console-heading"><div><h1>{sectionTitle}</h1><p>{tab === "stores" ? "Connect your store and bring your catalog into Metr." : tab === "keys" ? "Manage your store’s access to the Metr Fit API." : "From your first connection to a size recommendation."}</p></div>
-          {tab !== "guide" && <button className="console-primary" disabled={busy || tab === "keys" && !stores.length} onClick={() => { setKind(seller.shopify_enabled ? "shopify" : "custom"); setFormKind(tab === "stores" ? "store" : "key"); }}><ConsoleIcon name="plus" />{tab === "stores" ? "Add store" : "Create API key"}</button>}
+        <div className="console-heading"><div><h1>{sectionTitle}</h1><p>{tab === "stores" ? "Connect your store and bring your catalog into Metr." : tab === "keys" ? "Manage your store’s access to the Metr Fit API." : tab === "catalog" ? "View imported products, variants and stored availability." : tab === "charts" ? "Upload, verify and reuse size charts across your products." : "From your first connection to a size recommendation."}</p></div>
+          {(tab === "stores" || tab === "keys") && <button className="console-primary" disabled={busy || tab === "keys" && !stores.length} onClick={() => { setKind(seller.shopify_enabled ? "shopify" : "custom"); setFormKind(tab === "stores" ? "store" : "key"); }}><ConsoleIcon name="plus" />{tab === "stores" ? "Add store" : "Create API key"}</button>}
         </div>
         <div className="console-feedback" aria-live="polite">
           {error && <div className="console-alert console-error" role="alert"><p>{error}</p>{errorDetails}</div>}
           {notice && <div className="console-alert console-notice" role="status"><p>{notice}</p></div>}
         </div>
+        {(tab === "catalog" || tab === "charts") && <ConsoleCatalog mode={tab} stores={stores} storeID={catalogStoreID} onStoreChange={setCatalogStoreID} connections={connections} onBusyChange={setBusy} onStores={() => setTab("stores")} />}
         {tab === "stores" && launchShop && <section className="console-launch" aria-labelledby="shopify-launch-title">
           <span className="console-status">Shop verified</span><h2 id="shopify-launch-title">Connect your Shopify shop</h2>
           <p>Shopify verified <strong>{launchShop}</strong>. Choose which of your Metr stores to link. Nothing is authorized until Shopify approves the connection.</p>
@@ -166,7 +165,7 @@ export default function SellerConsole() {
                     <p className="console-small">{status === "authorized" ? connection?.last_sync_at ? `Last successful sync: ${new Date(connection.last_sync_at).toLocaleString()}.` : "Shopify connected · catalog not imported." : status === "reauthorization_required" ? "Shopify authorization expired. Reconnect to continue." : status === "unknown" ? "Could not check Shopify status. Refresh to retry." : shop ? "Connect Shopify, then select Sync catalog to import your products." : "Create a store-scoped API key to connect your backend."}</p>
                     {status !== "authorized" && connection?.last_sync_at && <p className="console-small">Last successful sync: {new Date(connection.last_sync_at).toLocaleString()}.</p>}
                     {connection?.last_sync_at && <p className="console-chart-note">Catalog imported. Add and verify size charts to enable recommendations.</p>}
-                    <div className="console-store-footer"><code>{store.id}</code><div className="console-actions">
+                    <div className="console-store-footer"><code>{store.id}</code><div className="console-actions"><button disabled={busy} onClick={() => { setCatalogStoreID(store.id); setTab("catalog"); }}>View catalog</button>
                       {shop ? <>
                         {canSync ? <button disabled={busy} onClick={() => void syncCatalog(store)}>{syncingStore === store.id ? "Syncing catalog…" : retryStore === store.id ? "Retry sync" : "Sync catalog"}</button> : <button disabled={busy || !seller.shopify_enabled || !!launchShop} onClick={() => void connect(store)}>{launchShop ? "Select this store above" : status === "reauthorization_required" ? "Reconnect Shopify" : "Connect Shopify"}<ConsoleIcon name="arrow" /></button>}
                         {["authorized", "reauthorization_required"].includes(status || "") && <details className="console-menu"><summary aria-label={`More actions for ${store.name}`}><ConsoleIcon name="more" /></summary><div>
@@ -196,7 +195,7 @@ export default function SellerConsole() {
         {tab === "guide" && <section className="console-guide"><ol>
           <li><span>01</span><div><h2>Connect your store</h2><p>Add a store to Metr, then authorize Shopify or issue a store-scoped key for your backend.</p><button onClick={() => setTab("stores")}>Open stores<ConsoleIcon name="arrow" /></button></div></li>
           <li><span>02</span><div><h2>Import your catalog</h2><p>After connecting Shopify, explicitly select Sync catalog to import products and variants. Resync preserves product type, gender, fit, stretch and chart links; missing Shopify items become unavailable.</p></div></li>
-          <li><span>03</span><div><h2>Add and verify size charts</h2><p>Sync imports no charts. Add and verify size charts to enable recommendations. For custom integrations, use the catalog API.</p></div></li>
+          <li><span>03</span><div><h2>Add and verify size charts</h2><p>Sync imports no charts. Upload a CSV or enter measurements in Size charts, verify the values, and assign the chart to one or more products in the same category.</p></div></li>
           <li><span>04</span><div><h2>Build the sizing experience</h2><p>Your backend starts a sizing session, requests each next question and submits the answers for a recommendation. Recheck inventory before checkout and report confirmed purchases and size returns.</p><p>Confidence is an uncalibrated evidence score. Show the size chart if sizing cannot recommend a suitable size.</p><Link className="console-inline-link" href="/docs">Open API documentation <span aria-hidden="true">↗</span></Link></div></li>
         </ol></section>}
       </div>
@@ -209,7 +208,7 @@ export default function SellerConsole() {
         {tab === "keys" ? <ol className="console-checklist"><li><span>1</span><div><strong>Choose one store</strong><p>Each key is scoped to its selected store.</p></div></li><li><span>2</span><div><strong>Set permissions</strong><p>Enable only the API scopes your integration uses.</p></div></li><li><span>3</span><div><strong>Save it securely</strong><p>Keep keys on your backend, never in theme or browser code.</p></div></li></ol> : <ol className="console-checklist">
           <li data-complete={stores.length > 0}><span>{stores.length ? <ConsoleIcon name="check" /> : "1"}</span><div><strong>Add your store</strong><p>Your catalog and API keys live here.</p></div></li>
           <li data-complete={hasConnectedCatalog}><span>{hasConnectedCatalog ? <ConsoleIcon name="check" /> : "2"}</span><div><strong>Connect and import</strong><p>Authorize Shopify, then select Sync catalog. Or use the catalog API.</p></div></li>
-          <li><span>3</span><div><strong>Add verified size charts</strong><p>{hasImport ? "Catalog imported. Add and verify size charts to enable recommendations." : "Charts are added separately from your catalog import."}</p></div></li>
+          <li><span>3</span><div><strong>Add verified size charts</strong><p>{hasImport ? "Catalog imported. Add and verify size charts to enable recommendations." : "Upload size charts separately, then assign them to products."}</p></div></li>
         </ol>}
       </div>
       <div className="console-help-footer"><p>Need the technical details?</p><Link href="/docs">Read the integration docs<ConsoleIcon name="arrow" /></Link></div>

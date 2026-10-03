@@ -11,6 +11,7 @@ const session = `console_${randomBytes(16).toString("hex")}_${randomBytes(16).to
 const launchQuery = "shop=canonical.myshopify.com&timestamp=123&hmac=fixture-signature";
 const requestID = "req_" + "f".repeat(32);
 let starts = 0, launches = 0, expired = false, syncFails = false;
+const chartInput = { name: "Sample chart", category: "tops", unit: "cm", basis: "body", verified: false, measurements: [{ name: "chest", method: "circumference" }], rows: [{ size: "S", measurements: { chest: { min: 88, max: 92 } } }] };
 const fixture = createServer(async (request, response) => {
   let raw = "";
   for await (const chunk of request) raw += chunk;
@@ -26,6 +27,24 @@ const fixture = createServer(async (request, response) => {
   }
   if (url.pathname === "/v1/console/login") return send(200, { account: { id: "acc_fixture" }, session_token: session, expires_at: new Date(Date.now() + 3600000).toISOString() });
   assert.ok(request.headers.authorization === `Bearer ${session}`, "Seller session forwarding mismatch");
+  if (url.pathname === "/v1/console/stores/sto_fixture/products") {
+    assert.equal(request.method, "GET"); assert.equal(url.searchParams.get("limit"), "20"); assert.equal(url.searchParams.get("cursor"), "prd_previous"); assert.equal(url.searchParams.get("merchant_id"), null);
+    return send(200, { data: [{ id: "prd_fixture", title: "Sample shirt", product_type: "shirt" }], next_cursor: "prd_fixture" });
+  }
+  if (url.pathname === "/v1/console/stores/sto_fixture/products/prd_fixture/variants") {
+    assert.equal(request.method, "GET"); assert.equal(url.searchParams.get("limit"), "20");
+    return send(200, { data: [{ id: "var_fixture", size: "S", available: false, external_id: "sample-variant" }] });
+  }
+  if (url.pathname === "/v1/console/stores/sto_fixture/size-charts" && request.method === "POST" || url.pathname === "/v1/console/stores/sto_fixture/size-charts/cht_fixture" && request.method === "PUT") {
+    assert.deepEqual(input, chartInput);
+    return send(request.method === "POST" ? 201 : 200, { id: "cht_fixture", store_id: "sto_fixture", revision: request.method === "POST" ? 1 : 2, ...chartInput });
+  }
+  if (url.pathname === "/v1/console/stores/sto_fixture/size-charts/cht_fixture/products") {
+    assert.equal(request.method, "POST");
+    if (input.product_ids.includes("prd_missing")) return send(422, { error: { code: "invalid_reference", message: "A referenced resource does not exist in this store.", request_id: requestID } });
+    assert.deepEqual(input, { product_ids: ["prd_one", "prd_two"] });
+    return send(200, { chart_id: "cht_fixture", products_updated: 2 });
+  }
   if (url.pathname === "/v1/console/stores/sto_fixture/shopify/start") {
     starts++;
     assert.equal(input.launch_query, launchQuery);
@@ -91,6 +110,27 @@ try {
   response = await request("stores/sto_fixture/shopify/sync", "POST", {}, sessionCookie);
   assert.equal(response.status, 502);
   assert.deepEqual(await response.json(), { error: "Failed to sync Shopify catalog. Check the connection and retry.", code: "sync_failed", request_id: requestID });
+  response = await request("stores/sto_fixture/products?limit=20&cursor=prd_previous&merchant_id=other", "GET", undefined, sessionCookie);
+  assert.equal(response.status, 200); assert.equal((await response.json()).next_cursor, "prd_fixture");
+  response = await request("stores/sto_fixture/products/prd_fixture/variants?limit=20", "GET", undefined, sessionCookie);
+  assert.equal(response.status, 200); assert.equal((await response.json()).data[0].available, false);
+  response = await request("stores/sto_fixture/products", "GET"); assert.equal(response.status, 401);
+  response = await request("stores/sto_fixture/products?limit=101", "GET", undefined, sessionCookie); assert.equal(response.status, 400);
+  response = await request("stores/sto_fixture/size-charts", "POST", chartInput, sessionCookie);
+  assert.equal(response.status, 201); assert.equal((await response.json()).verified, false);
+  response = await request("stores/sto_fixture/size-charts/cht_fixture", "PUT", chartInput, sessionCookie);
+  assert.equal(response.status, 200); assert.equal((await response.json()).revision, 2);
+  const chartHeaders = { Origin: "https://metr.test", "Content-Type": "application/json", "X-Metr-Console": "1", Cookie: sessionCookie };
+  response = await fetch(base + "stores/sto_fixture/size-charts", { method: "POST", headers: chartHeaders, body: " ".repeat(13000) + JSON.stringify(chartInput) });
+  assert.equal(response.status, 201, "Chart uploads allow the API's bounded JSON body size");
+  response = await fetch(base + "stores/sto_fixture/size-charts", { method: "POST", headers: chartHeaders, body: " ".repeat(256 * 1024) + JSON.stringify(chartInput) });
+  assert.equal(response.status, 400, "Oversized chart uploads are rejected by the gateway");
+  response = await fetch(base + "stores/sto_fixture/size-charts/cht_fixture", { method: "PUT", headers: { ...chartHeaders, Origin: "https://evil.test" }, body: JSON.stringify(chartInput) });
+  assert.equal(response.status, 403, "Chart updates require the same origin");
+  response = await request("stores/sto_fixture/size-charts/cht_fixture/products", "POST", { product_ids: ["prd_one", "prd_two"] }, sessionCookie);
+  assert.deepEqual(await response.json(), { chart_id: "cht_fixture", products_updated: 2 });
+  response = await request("stores/sto_fixture/size-charts/cht_fixture/products", "POST", { product_ids: ["prd_missing"] }, sessionCookie);
+  assert.equal(response.status, 422); assert.deepEqual(await response.json(), { error: "A referenced resource does not exist in this store.", code: "invalid_reference", request_id: requestID });
   const both = `${launchCookie}; ${sessionCookie}`;
   response = await request("stores/sto_fixture/shopify/start", "POST", { launch_query: "browser-override" }, both);
   assert.equal(response.status, 400); assert.equal(starts, 0);
@@ -126,7 +166,7 @@ try {
   assert.equal(response.status, 200);
   assert.equal(response.headers.getSetCookie().length, 2);
   assert.ok(launches >= 4);
-  console.log("PASS: real Next.js launch, sign-in, store selection, callback dispatch, origin checks and cookie lifecycle with a fixture API.");
+  console.log("PASS: real Next.js catalog pagination, chart uploads/updates/assignment, sync errors, OAuth, origin checks and cookie lifecycle with a fixture API.");
 } finally {
   next.kill("SIGTERM");
   await new Promise(resolve => fixture.close(resolve));

@@ -42,7 +42,13 @@ Next.js setup follows the [official installation documentation](https://nextjs.o
 ## Seller console
 
 `/console` provides account registration, login/logout, store setup and store-scoped
-API key management. Set `METR_API_URL`, canonical HTTPS `SITE_URL` and a separate
+API key management. The Catalog & inventory tab lists store-scoped products and
+stored variant availability. Size charts accepts CSV uploads or manual entry,
+lets sellers verify measurements, and assigns one chart to multiple products in
+the same store/category. CSVs are limited to 64 KiB and 30 sizes; image/PDF chart
+extraction is not implemented. Charts remain drafts until explicitly verified.
+These tabs require the matching console catalog routes from `metr_api` to be deployed.
+Set `METR_API_URL`, canonical HTTPS `SITE_URL` and a separate
 random `CONSOLE_PROXY_KEY` (at least 32 characters), matching the API server.
 The configured API base URL is `https://metr-fit-yjc3zwhbia-ue.a.run.app`.
 Set it in the website server's runtime environment; `.env.example` documents the

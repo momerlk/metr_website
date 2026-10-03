@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { consoleErrorCode, consoleEndpoint, consoleOriginAllowed, limitedText, shopifyCallbackResult, shopifyAppLaunch, shopifyLaunchQuery, shopifyRequestID } from "@/lib/console";
+import { consoleListRequest, consolePagination, consoleErrorCode, consoleEndpoint, consoleOriginAllowed, limitedText, shopifyCallbackResult, shopifyAppLaunch, shopifyLaunchQuery, shopifyRequestID } from "@/lib/console";
 export const runtime = "nodejs";
 const cookieName = process.env.NODE_ENV === "production" ? "__Host-metr_console" : "metr_console";
 const launchCookieName = process.env.NODE_ENV === "production" ? "__Host-metr_shopify_launch" : "metr_shopify_launch";
@@ -25,6 +25,8 @@ async function handle(request: Request, context: Context) {
   const { path } = await context.params;
   const endpoint = consoleEndpoint(request.method, path);
   if (!endpoint) return failure("Console endpoint not found.", 404);
+  const catalog = path[0] === "stores" && ["products", "size-charts"].includes(path[2]);
+  const chartWrite = path[0] === "stores" && path[2] === "size-charts" && path.length <= 4;
   const sync = request.method === "POST" && endpoint.endsWith("/shopify/sync");
   const callback = endpoint.endsWith("/shopify/callback");
   const params = new URL(request.url).searchParams;
@@ -51,9 +53,9 @@ async function handle(request: Request, context: Context) {
     return failure("Sign in to continue.", 401);
   }
   let body: string | undefined;
-  if (request.method === "POST" && path[0] !== "logout") {
+  if (["POST", "PUT"].includes(request.method) && path[0] !== "logout") {
     if (request.headers.get("content-type")?.split(";")[0] !== "application/json") return failure("Expected JSON.", 415);
-    try { body = await limitedText(request.body, 12000); JSON.parse(body); } catch { return failure("Invalid or oversized request.", 400); }
+    try { body = await limitedText(request.body, chartWrite ? 256 * 1024 : 12000); JSON.parse(body); } catch { return failure("Invalid or oversized request.", 400); }
   }
   try {
     if (launch) {
@@ -95,18 +97,16 @@ async function handle(request: Request, context: Context) {
       }
     }
     let query = callback ? new URL(request.url).search : "";
-    if (request.method === "GET" && path.length === 1 && ["stores", "api-keys"].includes(path[0])) {
-      const params = new URL(request.url).searchParams;
-      const limit = params.get("limit") || "50"; const cursor = params.get("cursor");
-      if (!/^\d+$/.test(limit) || Number(limit) < 1 || Number(limit) > 100 || (cursor && !/^[A-Za-z0-9_-]{1,64}$/.test(cursor))) return failure("Invalid pagination.", 400);
-      query = "?" + new URLSearchParams({ limit, ...(cursor ? { cursor } : {}) }).toString();
+    if (consoleListRequest(request.method, path)) {
+      try { query = consolePagination(new URL(request.url).searchParams); }
+      catch { return failure("Invalid pagination.", 400); }
     }
     if (query.length > 8192) return failure("Invalid Shopify callback.", 400);
     const upstream = await fetch(`${base}${endpoint}${query}`, {
       method: request.method, headers: { "Content-Type": "application/json", "X-Metr-Console-Key": proxyKey, ...(!auth && token ? { Authorization: `Bearer ${token}` } : {}) }, body,
       cache: "no-store", redirect: "error", signal: AbortSignal.timeout(sync ? 35000 : 15000),
     });
-    const payload = JSON.parse(await limitedText(upstream.body, 256 * 1024));
+    const payload = JSON.parse(await limitedText(upstream.body, catalog ? 2 * 1024 * 1024 : 256 * 1024));
     if (callback) return clearLaunch(goToConsole(site, shopifyCallbackResult(upstream.ok, upstream.status, payload.error?.code), payload.error?.request_id));
     if (!upstream.ok) {
       const response = failure(payload.error?.message || "Could not complete this request.", upstream.status, payload.error?.code, payload.error?.request_id);
@@ -135,3 +135,5 @@ async function handle(request: Request, context: Context) {
 export const GET = handle;
 export const POST = handle;
 export const DELETE = handle;
+
+export const PUT = handle;
