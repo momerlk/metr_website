@@ -49,8 +49,8 @@
   },
   {
     "slug": "shopify-authorization",
-    "title": "Shopify authorization",
-    "description": "Verify an app launch and authorize a shop; catalog sync and storefront sizing remain separate.",
+    "title": "Shopify authorization and catalog sync",
+    "description": "Authorize a Shopify store, refresh expiring tokens, import the catalog and synchronize variant stock.",
     "sections": [
       {
         "title": "Configure the standalone app",
@@ -103,11 +103,30 @@
           },
           {
             "type": "paragraph",
-            "text": "The callback requires Shopify HMAC, a fresh timestamp, the originating session, unexpired single-use state and an exact shop match. Only a successful token exchange with the required scopes saves AES-GCM encrypted tokens. An app launch alone cannot save a connection."
+            "text": "The callback requires Shopify HMAC, a fresh timestamp, the originating session, unexpired single-use state and an exact shop match. Only a successful token exchange with the required scopes saves AES-GCM encrypted tokens. Expiring tokens are refreshed automatically before use. An app launch alone cannot save a connection."
           },
           {
             "type": "code",
             "text": "GET /v1/console/shopify/callback",
+            "language": "text"
+          }
+        ]
+      },
+      {
+        "title": "Catalog and stock synchronization",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Once authorized, the console imports Shopify products, variants and inventory into Metr. S/M/L and Small/Medium/Large size names are mapped to standard size identifiers, and Shopify product types map to Metr's sizing categories. Stock availability stays current through Shopify inventory/product webhooks and scheduled background resynchronization."
+          },
+          {
+            "type": "code",
+            "text": "POST /v1/console/stores/{store_id}/shopify/sync",
+            "language": "text"
+          },
+          {
+            "type": "code",
+            "text": "POST /v1/webhooks/shopify",
             "language": "text"
           }
         ]
@@ -128,7 +147,7 @@
           },
           {
             "type": "paragraph",
-            "text": "Authorization does not import a catalog or install a sizing widget. Automatic token refresh is not implemented; expired tokens require reauthorization. Never log launch/callback queries, codes, state, credentials or tokens."
+            "text": "Never log launch/callback queries, codes, state, credentials or tokens."
           }
         ]
       }

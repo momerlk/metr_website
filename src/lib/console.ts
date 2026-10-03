@@ -1,7 +1,7 @@
 export type Seller = { account: { id: string; email: string }; merchant: { id: string; name: string }; shopify_enabled: boolean };
 export type Store = { id: string; name: string; domain: string };
 export type APIKey = { id: string; name: string; store_id: string; prefix: string; scopes: string[]; revoked_at?: string; expires_at?: string };
-export type ShopifyConnection = { store_id: string; shop?: string; status: "not_connected" | "authorized" | "reauthorization_required" | "unknown"; expires_at?: string };
+export type ShopifyConnection = { store_id: string; shop?: string; status: "not_connected" | "authorized" | "reauthorization_required" | "unknown"; expires_at?: string; last_sync_at?: string };
 const identifier = /^[A-Za-z0-9_-]{1,64}$/;
 export function consoleEndpoint(method: string, path: string[]): string | null {
   if (path.length === 1) {
@@ -14,6 +14,7 @@ export function consoleEndpoint(method: string, path: string[]): string | null {
   if (path[0] === "stores" && identifier.test(path[1] || "") && path[2] === "shopify") {
     if (path.length === 3 && ["GET", "DELETE"].includes(method)) return `/v1/console/stores/${path[1]}/shopify`;
     if (path.length === 4 && path[3] === "start" && method === "POST") return `/v1/console/stores/${path[1]}/shopify/start`;
+    if (path.length === 4 && path[3] === "sync" && method === "POST") return `/v1/console/stores/${path[1]}/shopify/sync`;
   }
   return null;
 }

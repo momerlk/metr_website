@@ -4,6 +4,7 @@ import { consoleEndpoint, consoleOriginAllowed, limitedText, shopifyCallbackResu
 test("console proxy only exposes explicit seller routes", () => {
   assert.equal(consoleEndpoint("POST", ["signup"]), "/v1/console/signup");
   assert.equal(consoleEndpoint("POST", ["stores", "sto_1", "shopify", "start"]), "/v1/console/stores/sto_1/shopify/start");
+  assert.equal(consoleEndpoint("POST", ["stores", "sto_1", "shopify", "sync"]), "/v1/console/stores/sto_1/shopify/sync");
   for (const path of [["merchants"], ["..", "api-keys"], ["stores", "../merchant", "shopify"], ["stores", "sto_1", "products"], ["api-keys", "key_1", "extra"]]) assert.equal(consoleEndpoint("POST", path), null);
   assert.equal(consoleEndpoint("GET", ["login"]), null);
   assert.equal(consoleEndpoint("DELETE", ["api-keys", "key_1"]), "/v1/console/api-keys/key_1");
