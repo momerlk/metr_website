@@ -89,3 +89,7 @@ requests. A shared database implementation or a persistent Node host is required
 before enabling production access requests; setting `LEADS_DB_PATH` to `/tmp` does
 not solve persistence. Shopify is unavailable until the backend operator configures
 the app credentials, encryption key and `https://metr.so/api/console/shopify/callback`.
+
+Production Turbopack disk caching is disabled because its cache can retain server
+credential values. If Netlify restored a cache from an older build, use **Clear
+cache and deploy site** after this change. Keep secret scanning enabled.

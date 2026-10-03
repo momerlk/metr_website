@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   poweredByHeader: false,
+  // Build caches can retain server secrets and trip Netlify secret scanning.
+  experimental: { turbopackFileSystemCacheForBuild: false },
   async redirects() {
     return [{ source: "/discover", destination: "/fit", permanent: false }];
   },
